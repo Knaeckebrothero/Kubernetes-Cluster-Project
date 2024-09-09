@@ -1,20 +1,26 @@
-# My own Kubernetes Cluster Project
-This project is all about creating and maintaing my own Kubernetes cluster. I have always wanned to have my own server and now it's finally time I guess. 
+# My Home-Grown Cluster Adventure<br>#ADefinatelyNotByAiGeneratedIntro
+Welcome to the epicenter of my personal tech revolution! This isn't just another Kubernetes cluster—it's my foray into the world of self-hosted, cutting-edge infrastructure. Born from a long-held dream and fueled by an insatiable curiosity, this project is where high-performance computing meets the comfort of my own home.
+
+Imagine having the power of a tech giant's data center right in your living room. That's exactly what I've set out to create. This Kubernetes cluster isn't just a collection of nodes and containers; it's a testament to the democratization of technology, a playground for innovation, and my very own digital sandbox where the only limit is my imagination.
+
+From orchestrating complex applications to experimenting with the latest in cloud-native technologies, this project is my ticket to the bleeding edge of modern infrastructure. It's where I'll be pushing boundaries, breaking things (and fixing them), and ultimately, mastering the art of Kubernetes.
+
+So, buckle up and dive in with me. Whether you're here to learn, to be inspired, or to embark on your own Kubernetes journey, you're in for an exhilarating ride. Welcome to my Kubernetes Cluster Project—where dreams of personal servers become reality, and the future of computing is homemade.
 
 ### Hardware
 ```bash
-NAME           ROLES                        CPU  RAM                       
-server-node-1  control-plane, etcd, master  8    32
-server-node-2  control-plane, etcd, master  4    32
-agent-node-3                                4    16
-agent-node-4                                12   64
+NAME           ROLES                        IP             CPU  RAM                       
+server-node-1  control-plane, etcd, master  192.168.1.101  8    32
+server-node-2  control-plane, etcd, master  192.168.1.102  4    32
+agent-node-3                                192.168.1.103  4    16
+agent-node-4                                NaN            12   64
 ```
 
 ### Software
-- Fedora CoreOS
-- K3s Kubernetes
-- Rancher
-- Longhorn
+- [Fedora CoreOS](https://fedoraproject.org/coreos/)
+- [K3S Kubernetes](https://k3s.io/) 
+- [Rancher](https://www.rancher.com/)
+- [Longhorn](https://longhorn.io/)
 
 ## Table of Contents
 - [Installation](#installation)

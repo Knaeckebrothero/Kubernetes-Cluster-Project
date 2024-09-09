@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Config
+clusters:
+- name: "local"
+  cluster:
+    server: "https://rancher.local/k8s/clusters/local"
+    certificate-authority-data: "<CERTIFICATE_AUTHORITY_DATA>"
+
+users:
+- name: "local"
+  user:
+    token: "<TOKEN>"
+
+
+contexts:
+- name: "local"
+  context:
+    user: "local"
+    cluster: "local"
+
+current-context: "local"

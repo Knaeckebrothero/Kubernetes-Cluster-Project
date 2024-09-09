@@ -1,0 +1,37 @@
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    field.cattle.io/description: Storage class for ssd drives.
+  creationTimestamp: '2024-09-09T19:00:22Z'
+  managedFields:
+    - apiVersion: storage.k8s.io/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:allowVolumeExpansion: {}
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:field.cattle.io/description: {}
+        f:parameters:
+          .: {}
+          f:dataLocality: {}
+          f:diskSelector: {}
+          f:numberOfReplicas: {}
+        f:provisioner: {}
+        f:reclaimPolicy: {}
+        f:volumeBindingMode: {}
+      manager: rancher
+      operation: Update
+      time: '2024-09-09T19:00:22Z'
+  name: longhorn-ssd
+  resourceVersion: '84274'
+  uid: 5baa0bb7-98ca-47d4-8d65-be18846d1056
+parameters:
+  dataLocality: disabled
+  diskSelector: ssd
+  numberOfReplicas: '2'
+provisioner: driver.longhorn.io
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
