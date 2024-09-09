@@ -1,0 +1,27 @@
+    # Setup a service that get's triggered by the timer to reboot the system
+    - name: daily-restart.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Trigger Daily Restart
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/systemctl reboot
+
+        [Install]
+        WantedBy=timer.target
+
+    # Setup daily reboot timer (reboots at 03:00 every day, gmt timezone)
+    - name: daily-restart.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Daily Restart
+
+        [Timer]
+        OnCalendar=*-*-* 03:00:00
+        Persistent=true
+
+        [Install]
+        WantedBy=multi-user.target

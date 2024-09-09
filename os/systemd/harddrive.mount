@@ -1,0 +1,14 @@
+### The service needs to be called exactly like this (including the apostrophes): 'var-lib-longhorn-sda\x2dssd\x2d1000.mount'
+### The service should have the following contents (keep in mind the example uses a 1000gb ssd as the first device -> sda)
+
+[Unit]
+Requires=systemd-fsck@dev-disk-by\x2dpartlabel-sda\x2dssd\x2d1000.service
+After=systemd-fsck@dev-disk-by\x2dpartlabel-sda\x2dssd\x2d1000.service
+
+[Mount]
+Where=/var/lib/longhorn/sda-ssd-1000
+What=/dev/disk/by-partlabel/sda-ssd-1000
+Type=ext4
+
+[Install]
+RequiredBy=local-fs.target
