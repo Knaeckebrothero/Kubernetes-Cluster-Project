@@ -5,14 +5,14 @@ metadata:
     cert-manager.io/issuer: rancher
     cert-manager.io/issuer-kind: Issuer
     field.cattle.io/publicEndpoints: >-
-      [{"addresses":["192.168.1.101","192.168.1.102"],"port":443,"protocol":"HTTPS","serviceName":"cattle-system:rancher","ingressName":"cattle-system:rancher","hostname":"rancher.local","path":"/","allNodes":false},{"addresses":["192.168.1.101","192.168.1.102"],"port":443,"protocol":"HTTPS","serviceName":"cattle-system:rancher","ingressName":"cattle-system:rancher","hostname":"rancher.localn1","path":"/","allNodes":false},{"addresses":["192.168.1.101","192.168.1.102"],"port":443,"protocol":"HTTPS","serviceName":"cattle-system:rancher","ingressName":"cattle-system:rancher","hostname":"rancher.localn2","path":"/","allNodes":false}]
+      [{"addresses":["192.168.1.101","192.168.1.102","192.168.1.103"],"port":443,"protocol":"HTTPS","serviceName":"cattle-system:rancher","ingressName":"cattle-system:rancher","hostname":"rancher.local","path":"/","allNodes":true}]
     meta.helm.sh/release-name: rancher
     meta.helm.sh/release-namespace: cattle-system
     nginx.ingress.kubernetes.io/proxy-connect-timeout: '30'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '1800'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '1800'
   creationTimestamp: '2024-09-09T16:18:17Z'
-  generation: 2
+  generation: 3
   labels:
     app: rancher
     app.kubernetes.io/managed-by: Helm
@@ -52,7 +52,7 @@ metadata:
       manager: traefik
       operation: Update
       subresource: status
-      time: '2024-09-09T16:18:17Z'
+      time: '2024-09-10T08:43:12Z'
     - apiVersion: networking.k8s.io/v1
       fieldsType: FieldsV1
       fieldsV1:
@@ -64,10 +64,10 @@ metadata:
           f:tls: {}
       manager: rancher
       operation: Update
-      time: '2024-09-09T16:52:26Z'
+      time: '2024-09-10T08:58:15Z'
   name: rancher
   namespace: cattle-system
-  resourceVersion: '46713'
+  resourceVersion: '139590'
   uid: 961bd251-4fda-4c0d-b98a-51eb79cb94f3
 spec:
   ingressClassName: traefik
@@ -82,34 +82,13 @@ spec:
                   number: 80
             path: /
             pathType: ImplementationSpecific
-    - host: rancher.localn1
-      http:
-        paths:
-          - backend:
-              service:
-                name: rancher
-                port:
-                  number: 80
-            path: /
-            pathType: ImplementationSpecific
-    - host: rancher.localn2
-      http:
-        paths:
-          - backend:
-              service:
-                name: rancher
-                port:
-                  number: 80
-            path: /
-            pathType: ImplementationSpecific
   tls:
     - hosts:
         - rancher.local
-        - rancher.localn1
-        - rancher.localn2
       secretName: tls-rancher-ingress
 status:
   loadBalancer:
     ingress:
       - ip: 192.168.1.101
       - ip: 192.168.1.102
+      - ip: 192.168.1.103

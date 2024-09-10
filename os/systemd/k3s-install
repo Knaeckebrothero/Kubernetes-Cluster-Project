@@ -9,7 +9,7 @@
 
         [Service]
         Type=oneshot
-        # Use this for the first server node to initialize the cluster
+        # Use this to initialize the cluster
         Environment="INSTALL_K3S_EXEC=server --cluster-init --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.101"
         ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -s - --write-kubeconfig-mode 644'
         RemainAfterExit=true
@@ -28,7 +28,27 @@
 
         [Service]
         Type=oneshot
-        # Use this to setup the third node as an agent node
+        # Use this to join the cluster as a server node  
+        Environment="INSTALL_K3S_EXEC=server --server https://192.168.1.101:6443 --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.102"
+        Environment="K3S_TOKEN=<TOKEN_GOES_HERE>"
+        ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # Install and configure kubernetes
+    - name: k3s-install.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install k3s
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        Type=oneshot
+        # Use this to join the cluster as a agent node  
         Environment="K3S_URL=https://192.168.1.101:6443"
         Environment="K3S_TOKEN=<TOKEN_GOES_HERE>"
         Environment="INSTALL_K3S_EXEC=agent --node-external-ip=192.168.1.103"

@@ -12,8 +12,8 @@ So, buckle up and dive in with me. Whether you're here to learn, to be inspired,
 NAME           ROLES                        IP             CPU  RAM                       
 server-node-1  control-plane, etcd, master  192.168.1.101  8    32
 server-node-2  control-plane, etcd, master  192.168.1.102  4    32
-agent-node-3                                192.168.1.103  4    16
-agent-node-4                                NaN            12   64
+server-node-3  control-plane, etcd, master  192.168.1.103  4    16
+agent-node-1                                NaN            12   64
 ```
 
 ### Software
