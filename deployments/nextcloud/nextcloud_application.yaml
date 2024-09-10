@@ -1,0 +1,109 @@
+# K3s Kubernetes Deployment for the Nextcloud application
+# https://nextcloud.com/
+# https://hub.docker.com/_/nextcloud
+# https://github.com/docker-library/docs/blob/master/nextcloud/README.md
+
+
+# StorageClass for Longhorn appdata
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-app-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
+# StrorageClass for Longhorn ssd data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data-ssd-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 512Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data-hdd-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 1024Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      containers:
+      - name: nextcloud
+        image: nextcloud:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: POSTGRES_HOST
+          value: nextcloud-db
+        - name: POSTGRES_DB
+          value: nextcloud
+        - name: POSTGRES_USER
+          value: nextcloud
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-db-secret
+              key: db-password
+        volumeMounts:
+        - name: nextcloud-app
+          mountPath: /var/www/html
+        - name: nextcloud-data-ssd
+          mountPath: /var/www/html/data/ssd
+        - name: nextcloud-data-hdd
+          mountPath: /var/www/html/data/hdd
+      volumes:
+      - name: nextcloud-app
+        persistentVolumeClaim:
+          claimName: nextcloud-app-pvc
+      - name: nextcloud-data-ssd
+        persistentVolumeClaim:
+          claimName: nextcloud-data-ssd-pvc
+      - name: nextcloud-data-hdd
+        persistentVolumeClaim:
+          claimName: nextcloud-data-hdd-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  selector:
+    app: nextcloud
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
