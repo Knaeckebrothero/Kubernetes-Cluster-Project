@@ -73,6 +73,8 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: postgres-password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
