@@ -87,6 +87,15 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: db-password
+
+        # Redis connection settings
+        - name: REDIS_HOST
+          value: nextcloud-redis
+        - name: REDIS_HOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: redis-password
         volumeMounts:
         - name: nextcloud-app
           mountPath: /var/www/html
