@@ -44,7 +44,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: nextcloud-db-secret
+              name: nextcloud-secret
               key: db-password
         ports:
         - containerPort: 5432
