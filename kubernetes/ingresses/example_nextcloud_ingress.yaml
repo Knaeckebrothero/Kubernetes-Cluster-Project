@@ -1,0 +1,82 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: cloudflare
+    cert-manager.io/issuer-kind: Issuer
+    field.cattle.io/publicEndpoints: >-
+      [{"addresses":["192.168.1.101","192.168.1.102","192.168.1.103"],"port":443,"protocol":"HTTPS","serviceName":"nextcloud:nextcloud","ingressName":"nextcloud:nextcloud","hostname":"nextcloud.local","path":"/","allNodes":false},{"addresses":["192.168.1.101","192.168.1.102","192.168.1.103"],"port":443,"protocol":"HTTPS","serviceName":"nextcloud:nextcloud","ingressName":"nextcloud:nextcloud","hostname":"<YOUR_DOMAIN>","path":"/","allNodes":false}]
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '30'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '1800'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '1800'
+  creationTimestamp: '2024-09-12T15:20:27Z'
+  generation: 2
+  labels:
+    app: <YOUR_APP_NAME>
+    app.kubernetes.io/managed-by: kubectl
+  managedFields:
+    - apiVersion: networking.k8s.io/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:status:
+          f:loadBalancer:
+            f:ingress: {}
+      manager: traefik
+      operation: Update
+      subresource: status
+      time: '2024-09-12T15:20:27Z'
+    - apiVersion: networking.k8s.io/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:cert-manager.io/issuer: {}
+            f:cert-manager.io/issuer-kind: {}
+            f:field.cattle.io/publicEndpoints: {}
+            f:nginx.ingress.kubernetes.io/proxy-connect-timeout: {}
+            f:nginx.ingress.kubernetes.io/proxy-read-timeout: {}
+            f:nginx.ingress.kubernetes.io/proxy-send-timeout: {}
+          f:labels:
+            .: {}
+            f:app: {}
+            f:app.kubernetes.io/managed-by: {}
+        f:spec:
+          f:ingressClassName: {}
+          f:rules: {}
+          f:tls: {}
+      manager: rancher
+      operation: Update
+      time: '2024-09-12T15:22:05Z'
+  name: nextcloud
+  namespace: nextcloud
+  resourceVersion: '1338737'
+  uid: e44394b2-32c9-46fd-9233-488faf9ce954
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: nextcloud.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: nextcloud
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
+    - host: <YOUR_DOMAIN>
+      http:
+        paths:
+          - backend:
+              service:
+                name: nextcloud
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - nextcloud.local
+        - <YOUR_DOMAIN>
+      secretName: cloudflare-wildcard-cert

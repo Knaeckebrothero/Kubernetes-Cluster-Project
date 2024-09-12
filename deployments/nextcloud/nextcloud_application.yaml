@@ -8,7 +8,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nextcloud-app-pvc
+  name: nextcloud-pvc
   namespace: nextcloud
 spec:
   accessModes:
@@ -16,26 +16,13 @@ spec:
   storageClassName: longhorn-ssd
   resources:
     requests:
-      storage: 8Gi
+      storage: 1024Gi
 ---
 # StrorageClass for Longhorn ssd data
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nextcloud-data-ssd-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn-ssd
-  resources:
-    requests:
-      storage: 512Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-data-hdd-pvc
+  name: nextcloud-mnt-hdd1-pvc
   namespace: nextcloud
 spec:
   accessModes:
@@ -43,7 +30,20 @@ spec:
   storageClassName: longhorn-hdd
   resources:
     requests:
-      storage: 1024Gi
+      storage: 512Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-mnt-hdd2-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 512Gi
 ---
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
@@ -125,20 +125,20 @@ spec:
         volumeMounts:
         - name: nextcloud-app
           mountPath: /var/www/html
-        - name: nextcloud-data-ssd
-          mountPath: /var/mnt/ssd-512
-        - name: nextcloud-data-hdd
-          mountPath: /var/mnt/hdd-1024
+        - name: nextcloud-mnt-hdd1
+          mountPath: /var/mnt/hdd1
+        - name: nextcloud-mnt-hdd2
+          mountPath: /var/mnt/hdd2
       volumes:
       - name: nextcloud-app
         persistentVolumeClaim:
-          claimName: nextcloud-app-pvc
-      - name: nextcloud-data-ssd
+          claimName: nextcloud-pvc
+      - name: nextcloud-mnt-hdd1
         persistentVolumeClaim:
-          claimName: nextcloud-data-ssd-pvc
-      - name: nextcloud-data-hdd
+          claimName: nextcloud-mnt-hdd1-pvc
+      - name: nextcloud-mnt-hdd2
         persistentVolumeClaim:
-          claimName: nextcloud-data-hdd-pvc
+          claimName: nextcloud-mnt-hdd2-pvc
 ---
 apiVersion: v1
 kind: Service

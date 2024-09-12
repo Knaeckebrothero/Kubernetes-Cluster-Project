@@ -1,0 +1,75 @@
+apiVersion: v1
+data:
+  tls.crt: >-
+    <YOUR_CERT>
+  tls.key: >-
+    <YOUR_KEY>
+kind: Secret
+metadata:
+  annotations:
+    cert-manager.io/alt-names: '<YOUR_DOMAIN>'
+    cert-manager.io/certificate-name: cloudflare-wildcard-cert
+    cert-manager.io/common-name: CloudFlare Origin Certificate
+    cert-manager.io/ip-sans: ''
+    cert-manager.io/issuer-group: cert-manager.io
+    cert-manager.io/issuer-kind: Issuer
+    cert-manager.io/issuer-name: cloudflare
+    cert-manager.io/uri-sans: ''
+    kubernetes.io/ingress-class: traefik
+  creationTimestamp: '2024-09-12T15:13:36Z'
+  labels:
+    app.kubernetes.io/name: cloudflare-cert
+    app.kubernetes.io/part-of: ingress-system
+    cert-type: wildcard
+    controller.cert-manager.io/fao: 'true'
+    domain: <YOUR_DOMAIN>
+  managedFields:
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:data:
+          f:tls.crt: {}
+          f:tls.key: {}
+        f:metadata:
+          f:annotations:
+            f:cert-manager.io/alt-names: {}
+            f:cert-manager.io/certificate-name: {}
+            f:cert-manager.io/common-name: {}
+            f:cert-manager.io/ip-sans: {}
+            f:cert-manager.io/issuer-group: {}
+            f:cert-manager.io/issuer-kind: {}
+            f:cert-manager.io/issuer-name: {}
+            f:cert-manager.io/uri-sans: {}
+          f:labels:
+            f:controller.cert-manager.io/fao: {}
+        f:type: {}
+      manager: cert-manager-certificates-issuing
+      operation: Apply
+      time: '2024-09-12T15:20:27Z'
+    - apiVersion: v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:data:
+          .: {}
+          f:tls.crt: {}
+          f:tls.key: {}
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:cert-manager.io/issuer-name: {}
+            f:kubernetes.io/ingress-class: {}
+          f:labels:
+            .: {}
+            f:app.kubernetes.io/name: {}
+            f:app.kubernetes.io/part-of: {}
+            f:cert-type: {}
+            f:domain: {}
+        f:type: {}
+      manager: rancher
+      operation: Update
+      time: '2024-09-12T15:13:36Z'
+  name: cloudflare-wildcard-cert
+  namespace: <YOUR_NAMESPACE>
+  resourceVersion: '1338104'
+  uid: 5a8e7c42-4467-4eba-960c-0069630ad11a
+type: kubernetes.io/tls
