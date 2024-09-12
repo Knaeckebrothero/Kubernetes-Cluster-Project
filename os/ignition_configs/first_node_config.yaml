@@ -53,47 +53,6 @@ systemd:
         [Install]
         WantedBy=timer.target
 
-    # Install a node exporter for prometheus monitoring
-    - name: node-exporter-install.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Install Node Exporter
-        After=network-online.target
-        Wants=network-online.target
-        Before=node-exporter.service
-
-        [Service]
-        Type=oneshot
-        ExecStart=/bin/sh -c '\
-          set -x; cd /tmp; /usr/bin/curl -sfL -LO https://github.com/prometheus/node_exporter/releases/download/v1.8.0/node_exporter-1.8.0.linux-amd64.tar.gz && \
-          tar xvfz node_exporter-1.8.0.linux-amd64.tar.gz && \
-          cp node_exporter-1.8.0.linux-amd64/node_exporter /usr/local/bin/node_exporter && \
-          rm -rf node_exporter-1.8.0.linux-amd64*'
-        RemainAfterExit=true
-
-        [Install]
-        WantedBy=multi-user.target
-
-    # Setup a service to start the node exporter
-    - name: node-exporter.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Node Exporter
-        After=network-online.target
-        Wants=network-online.target
-
-        [Service]
-        Type=simple
-        User=node_exporter_user
-        ExecStart=/usr/local/bin/node_exporter
-        Restart=on-failure
-        RestartSec=5s
-
-        [Install]
-        WantedBy=multi-user.target
-
     # Install and configure kubernetes
     - name: k3s-install.service
       enabled: true
