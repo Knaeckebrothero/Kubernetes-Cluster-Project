@@ -15,7 +15,7 @@ spec:
   storageClassName: longhorn-ssd
   resources:
     requests:
-      storage: 32Gi
+      storage: 16Gi
 ---
 # Create a deployment for the postgres used by Nextcloud
 apiVersion: apps/v1
@@ -40,8 +40,8 @@ spec:
         - containerPort: 5432
         resources:
           requests:
-            cpu: 250m
-            memory: 1Gi
+            cpu: 100m
+            memory: 256Mi
           limits:
             cpu: 500m
             memory: 2Gi

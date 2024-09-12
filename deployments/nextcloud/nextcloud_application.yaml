@@ -4,11 +4,11 @@
 # https://github.com/docker-library/docs/blob/master/nextcloud/README.md
 
 
-# StorageClass for Longhorn appdata
+# PersistentVolumeClaim for the Nextcloud application
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nextcloud-app-ssd-pvc
+  name: nextcloud-app-pvc
   namespace: nextcloud
 spec:
   accessModes:
@@ -16,7 +16,7 @@ spec:
   storageClassName: longhorn-ssd
   resources:
     requests:
-      storage: 16Gi
+      storage: 8Gi
 ---
 # StrorageClass for Longhorn ssd data
 apiVersion: v1
@@ -45,6 +45,7 @@ spec:
     requests:
       storage: 1024Gi
 ---
+# Deployment for the Nextcloud application
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -67,25 +68,11 @@ spec:
         - containerPort: 80
         resources:
           requests:
-            cpu: 500m
-            memory: 2Gi
+            cpu: 250m
+            memory: 1Gi
           limits:
             cpu: 1000m
             memory: 4Gi
-        livenessProbe:
-          httpGet:
-            path: /status.php
-            port: 80
-          initialDelaySeconds: 120
-          periodSeconds: 60  # Check every minute
-          failureThreshold: 3  # Allow 3 failures before restarting
-        readinessProbe:
-          httpGet:
-            path: /status.php
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 60  # Check every minute
-          failureThreshold: 3  # Allow 3 failures before marking as not ready
         env:
         # Nextcloud settings
         - name: NEXTCLOUD_ADMIN_USER
@@ -98,6 +85,21 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: admin-password
+        - name: NEXTCLOUD_DATA_DIR
+          value: /var/www/html/data
+
+        # Apache settings
+        - name: APACHE_DISABLE_REWRITE_IP
+          value: "1"
+        - name: TRUSTED_PROXIES
+          value: 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 104.16.0.0/13 104.24.0.0/14 108.162.192.0/18 131.0.72.0/22 141.101.64.0/18 162.158.0.0/15 172.64.0.0/13 173.245.48.0/20 188.114.96.0/20 190.93.240.0/20 197.234.240.0/22 198.41.128.0/17
+        - name: OVERWRITEPROTOCOL
+          value: https
+        - name: NEXTCLOUD_TRUSTED_DOMAINS
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-secret
+              key: trusted-domains
 
         # Database connection settings
         - name: POSTGRES_HOST
@@ -124,13 +126,13 @@ spec:
         - name: nextcloud-app
           mountPath: /var/www/html
         - name: nextcloud-data-ssd
-          mountPath: /var/www/html/data/ssd
+          mountPath: /var/mnt/ssd-512
         - name: nextcloud-data-hdd
-          mountPath: /var/www/html/data/hdd
+          mountPath: /var/mnt/hdd-1024
       volumes:
       - name: nextcloud-app
         persistentVolumeClaim:
-          claimName: nextcloud-app-ssd-pvc
+          claimName: nextcloud-app-pvc
       - name: nextcloud-data-ssd
         persistentVolumeClaim:
           claimName: nextcloud-data-ssd-pvc

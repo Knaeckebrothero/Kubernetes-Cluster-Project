@@ -2,19 +2,6 @@
 # https://hub.docker.com/_/redis
 
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-redis-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn-ssd
-  resources:
-    requests:
-      storage: 5Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,10 +24,10 @@ spec:
         - containerPort: 6379
         resources:
           requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 100m
+            memory: 128Mi
           limits:
-            cpu: 500m
+            cpu: 250m
             memory: 512Mi
         livenessProbe:
           tcpSocket:
@@ -56,33 +43,13 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 60  # Check every minute
           failureThreshold: 3  # Allow 3 failures before marking as not ready
-        args:
-        - --requirepass
-        - $(REDIS_PASSWORD)
-        - --appendonly
-        - "yes"
-        - --save
-        - "900"
-        - "1"
-        - --save
-        - "300"
-        - "10"
-        - --save
-        - "60"
-        - "10000"
+        args: ["--requirepass", "$(REDIS_PASSWORD)"]
         env:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: nextcloud-secret
               key: redis-password
-        volumeMounts:
-        - name: redis-data
-          mountPath: /data
-      volumes:
-      - name: redis-data
-        persistentVolumeClaim:
-          claimName: nextcloud-redis-pvc
 ---
 apiVersion: v1
 kind: Service
