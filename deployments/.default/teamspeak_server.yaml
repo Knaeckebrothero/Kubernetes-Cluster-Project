@@ -49,6 +49,8 @@ spec:
             cpu: 250m
             memory: 256Mi
         env:
+        - name: TS3SERVER_QUERY_PROTOCOLS
+          value: ssh
         - name: TS3SERVER_LICENSE
           value: "accept"
         volumeMounts:
