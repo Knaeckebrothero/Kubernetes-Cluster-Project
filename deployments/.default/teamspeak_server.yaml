@@ -59,12 +59,14 @@ spec:
         persistentVolumeClaim:
           claimName: teamspeak-pvc
 ---
+# LoadBalancer to expose the Teamspeak Server ports (important for UDP!!!)
 apiVersion: v1
 kind: Service
 metadata:
-  name: teamspeak
+  name: teamspeak-loadbalancer
   namespace: default
 spec:
+  type: LoadBalancer
   selector:
     app: teamspeak
   ports:
@@ -80,16 +82,3 @@ spec:
       protocol: TCP
       port: 30033
       targetPort: 30033
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRouteUDP
-metadata:
-  name: teamspeak-udp
-  namespace: default
-spec:
-  entryPoints:
-    - teamspeak-udp
-  routes:
-  - services:
-    - name: teamspeak
-      port: 9987
