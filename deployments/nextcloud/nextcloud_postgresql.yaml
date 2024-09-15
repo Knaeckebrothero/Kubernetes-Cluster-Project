@@ -40,11 +40,11 @@ spec:
         - containerPort: 5432
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 250m
+            memory: 512Mi
           limits:
-            cpu: 500m
-            memory: 2Gi
+            cpu: 3000m
+            memory: 5Gi
         livenessProbe:
           exec:
             command:

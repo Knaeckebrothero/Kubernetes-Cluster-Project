@@ -12,7 +12,7 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: longhorn-ssd
   resources:
     requests:
@@ -26,11 +26,11 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: longhorn-hdd
   resources:
     requests:
-      storage: 512Gi
+      storage: 1024Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -39,11 +39,11 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: longhorn-hdd
   resources:
     requests:
-      storage: 512Gi
+      storage: 1024Gi
 ---
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
@@ -52,7 +52,7 @@ metadata:
   name: nextcloud
   namespace: nextcloud
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: nextcloud
@@ -71,8 +71,22 @@ spec:
             cpu: 250m
             memory: 1Gi
           limits:
-            cpu: 1000m
-            memory: 4Gi
+            cpu: 3000m
+            memory: 5Gi
+        livenessProbe:
+          httpGet:
+            path: /status.php
+            port: 80
+          initialDelaySeconds: 180
+          periodSeconds: 60  # Check every minute
+          failureThreshold: 3  # Allow 3 failures before restarting
+        readinessProbe:
+          httpGet:
+            path: /status.php
+            port: 80
+          initialDelaySeconds: 120
+          periodSeconds: 60  # Check every minute
+          failureThreshold: 3  # Allow 3 failures before marking as not ready
         env:
         # Nextcloud settings
         - name: NEXTCLOUD_ADMIN_USER
