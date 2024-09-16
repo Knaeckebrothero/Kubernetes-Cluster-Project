@@ -9,13 +9,15 @@ kind: PersistentVolumeClaim
 metadata:
   name: teamspeak-pvc
   namespace: default
+  annotations:
+    longhornio/number-of-replicas: "2"
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: longhorn-ssd
   resources:
     requests:
-      storage: 1Gi
+      storage: 5Gi
 ---
 # Deployment for the Teamspeak Server
 apiVersion: apps/v1
@@ -46,11 +48,13 @@ spec:
             cpu: 100m
             memory: 128Mi
           limits:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 500m
+            memory: 512Mi
         env:
         - name: TS3SERVER_QUERY_PROTOCOLS
           value: ssh
+        - name: TS3SERVER_LOG_QUERY_COMMANDS
+          value: "1"
         - name: TS3SERVER_LICENSE
           value: "accept"
         volumeMounts:
@@ -76,6 +80,7 @@ spec:
       protocol: UDP
       port: 9987
       targetPort: 9987
+    # The following ports could also be secured with the ingress controller to use the certificate
     - name: serverquery
       protocol: TCP
       port: 10011
