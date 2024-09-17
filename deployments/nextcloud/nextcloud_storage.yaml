@@ -1,0 +1,73 @@
+# K3s Kubernetes VolumeClaims for Nextcloud
+# https://nextcloud.com/
+
+
+# Volumeclaim for the postgres db
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-postgresql-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Use fast storage for the db
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
+# PersistentVolumeClaim for the Nextcloud application
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-main-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
+# PersistentVolumeClaim for the Nextcloud application
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 1024Gi
+---
+# StrorageClass for Longhorn ssd data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data-hdd1-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 1024Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data-hdd2-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 1024Gi

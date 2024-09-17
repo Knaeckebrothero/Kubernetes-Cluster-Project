@@ -1,8 +1,0 @@
-# K3s Kubernetes Namespace for the Nextcloud deployment
-# https://nextcloud.com/
-
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: nextcloud

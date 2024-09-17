@@ -4,47 +4,6 @@
 # https://github.com/docker-library/docs/blob/master/nextcloud/README.md
 
 
-# PersistentVolumeClaim for the Nextcloud application
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-ssd
-  resources:
-    requests:
-      storage: 1024Gi
----
-# StrorageClass for Longhorn ssd data
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-mnt-hdd1-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-hdd
-  resources:
-    requests:
-      storage: 1024Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-mnt-hdd2-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-hdd
-  resources:
-    requests:
-      storage: 1024Gi
----
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
 kind: Deployment
@@ -61,6 +20,36 @@ spec:
       labels:
         app: nextcloud
     spec:
+      initContainers:
+      - name: init-chmod-data
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          # Set correct permissions
+          chown -R www-data:www-data /var/data
+          chmod 0770 /var/data
+          
+          # Wait for the database to be ready (you might need to adjust this)
+          until nc -z nextcloud-postgresql 5432; do echo waiting for postgres; sleep 2; done;
+          
+          # Set backgroundjobs mode to cron
+          php occ config:app:set core backgroundjobs_mode --value cron
+          
+          # Set maintenance window start
+          php occ config:system:set maintenance_window_start --type=integer --value=1
+        volumeMounts:
+        - name: nextcloud-main
+          mountPath: /var/www/html
+        - name: nextcloud-data
+          mountPath: /var/data
+        - name: nextcloud-data-hdd1
+          mountPath: /var/data/hdd1
+        - name: nextcloud-data-hdd2
+          mountPath: /var/data/hdd2
+      securityContext:
+        fsGroup: 33 # This is typically the www-data group ID
       containers:
       - name: nextcloud
         image: docker.io/library/nextcloud:28.0.9-apache
@@ -71,8 +60,8 @@ spec:
             cpu: 250m
             memory: 1Gi
           limits:
-            cpu: 3000m
-            memory: 5Gi
+            cpu: 3500m
+            memory: 8Gi
         #readinessProbe:
         #  httpGet:
         #    path: /status.php
@@ -102,7 +91,9 @@ spec:
               name: nextcloud-secret
               key: admin-password
         - name: NEXTCLOUD_DATA_DIR
-          value: /var/www/html/data
+          value: /var/data
+        - name: NEXTCLOUD_INIT_HTACCESS
+          value: true
 
         # Apache settings
         - name: APACHE_DISABLE_REWRITE_IP
@@ -139,22 +130,27 @@ spec:
               name: nextcloud-secret
               key: redis-password
         volumeMounts:
-        - name: nextcloud-app
+        - name: nextcloud-main
           mountPath: /var/www/html
-        - name: nextcloud-mnt-hdd1
-          mountPath: /var/mnt/hdd1
-        - name: nextcloud-mnt-hdd2
-          mountPath: /var/mnt/hdd2
+        - name: nextcloud-data
+          mountPath: /var/data
+        - name: nextcloud-data-hdd1
+          mountPath: /var/data/hdd1
+        - name: nextcloud-data-hdd2
+          mountPath: /var/data/hdd2
       volumes:
-      - name: nextcloud-app
+      - name: nextcloud-main
         persistentVolumeClaim:
-          claimName: nextcloud-pvc
-      - name: nextcloud-mnt-hdd1
+          claimName: nextcloud-main-pvc
+      - name: nextcloud-data
         persistentVolumeClaim:
-          claimName: nextcloud-mnt-hdd1-pvc
-      - name: nextcloud-mnt-hdd2
+          claimName: nextcloud-data-pvc
+      - name: nextcloud-data-hdd1
         persistentVolumeClaim:
-          claimName: nextcloud-mnt-hdd2-pvc
+          claimName: nextcloud-data-hdd1-pvc
+      - name: nextcloud-data-hdd2
+        persistentVolumeClaim:
+          claimName: nextcloud-data-hdd2-pvc
 ---
 apiVersion: v1
 kind: Service
