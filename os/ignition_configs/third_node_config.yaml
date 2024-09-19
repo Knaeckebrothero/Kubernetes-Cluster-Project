@@ -25,26 +25,26 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup weekly reboot timer (reboots at 02:30 every Wednesday, GMT timezone)
-    - name: weekly-restart.timer
+    # Setup daily reboot timer (reboots at 03:00 every day, gmt timezone)
+    - name: daily-restart.timer
       enabled: true
       contents: |
         [Unit]
-        Description=Weekly Restart
+        Description=Daily Restart
 
         [Timer]
-        OnCalendar=Wed *-*-* 02:30:00
+        OnCalendar=*-*-* 03:00:00
         Persistent=true
 
         [Install]
         WantedBy=multi-user.target
 
     # Setup a service that get's triggered by the timer to reboot the system
-    - name: weekly-restart.service
+    - name: daily-restart.service
       enabled: true
       contents: |
         [Unit]
-        Description=Trigger Weekly Restart
+        Description=Trigger Daily Restart
 
         [Service]
         Type=oneshot
@@ -126,6 +126,15 @@ storage:
       mode: 0644
       contents:
         inline: server-node-3
+
+    # Confiure a longer shutdown timeout
+    - path: /etc/systemd/system.conf.d/90-custom.conf
+      mode: 0644
+      contents:
+        inline: |
+          [Manager]
+          DefaultTimeoutStopSec=300s
+          DefaultTimeoutStartSec=90s
 
     # Config file for zincati
     - path: /etc/zincati/config.d/90-custom.toml

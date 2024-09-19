@@ -25,7 +25,7 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup daily reboot timer (reboots at 03:30 every day, gmt timezone)
+    # Setup daily reboot timer (reboots at 02:30 every day, gmt timezone)
     - name: daily-restart.timer
       enabled: true
       contents: |
@@ -33,7 +33,7 @@ systemd:
         Description=Daily Restart
 
         [Timer]
-        OnCalendar=*-*-* 03:30:00
+        OnCalendar=*-*-* 02:30:00
         Persistent=true
 
         [Install]
@@ -174,6 +174,15 @@ storage:
       mode: 0644
       contents:
         inline: server-node-2
+
+    # Confiure a longer shutdown timeout
+    - path: /etc/systemd/system.conf.d/90-custom.conf
+      mode: 0644
+      contents:
+        inline: |
+          [Manager]
+          DefaultTimeoutStopSec=300s
+          DefaultTimeoutStartSec=90s
 
     # Config file for zincati
     - path: /etc/zincati/config.d/90-custom.toml

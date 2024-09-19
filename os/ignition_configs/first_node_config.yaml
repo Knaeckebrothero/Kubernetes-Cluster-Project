@@ -11,10 +11,6 @@ passwd:
     - name: core 
       ssh_authorized_keys:
         - <SSH_PUBLIC_KEY>
-    
-    # Additional service users
-    - name: node_exporter_user
-      system: true
 
 # System services configuration
 systemd:
@@ -25,33 +21,19 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup daily reboot timer (reboots at 03:00 every day, gmt timezone)
-    - name: daily-restart.timer
+    # Setup weekly reboot timer (reboots at 02:00 every Tuesday, GMT timezone)
+    - name: weekly-restart.timer
       enabled: true
       contents: |
         [Unit]
-        Description=Daily Restart
+        Description=Weekly Restart
 
         [Timer]
-        OnCalendar=*-*-* 03:00:00
+        OnCalendar=Tue *-*-* 02:00:00
         Persistent=true
 
         [Install]
         WantedBy=multi-user.target
-
-    # Setup a service that get's triggered by the timer to reboot the system
-    - name: daily-restart.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Trigger Daily Restart
-
-        [Service]
-        Type=oneshot
-        ExecStart=/usr/bin/systemctl reboot
-
-        [Install]
-        WantedBy=timer.target
 
     # Install and configure kubernetes
     - name: k3s-install.service
@@ -110,7 +92,7 @@ storage:
       partitions:
       - size_mib: 0
         start_mib: 0
-        label: sda-ssd-2000
+        label: sda-ssd-1000
     - device: /dev/sdb
       wipe_table: true
       partitions:
@@ -173,6 +155,15 @@ storage:
       mode: 0644
       contents:
         inline: server-node-1
+    
+    # Confiure a longer shutdown timeout
+    - path: /etc/systemd/system.conf.d/90-custom.conf
+      mode: 0644
+      contents:
+        inline: |
+          [Manager]
+          DefaultTimeoutStopSec=300s
+          DefaultTimeoutStartSec=90s
 
     # Config file for zincati
     - path: /etc/zincati/config.d/90-custom.toml
