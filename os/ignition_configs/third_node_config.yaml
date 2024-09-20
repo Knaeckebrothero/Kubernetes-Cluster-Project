@@ -11,10 +11,6 @@ passwd:
     - name: core 
       ssh_authorized_keys:
         - <SSH_PUBLIC_KEY>
-    
-    # Additional service users
-    - name: node_exporter_user
-      system: true
 
 # System services configuration
 systemd:
@@ -104,13 +100,55 @@ storage:
         resize: true
       - size_mib: 0 # This is the var partition, which will take up the rest of the disk
         label: var
+    
+    # Configure the additional hard drive for the var partition
+    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
+      wipe_table: true
+      partitions:
+      - number: 1
+        label: longhorn-ssd-2tb-1
+        size_mib: 0
+        start_mib: 0
+    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
+      wipe_table: true
+      partitions:
+      - number: 1
+        label: longhorn-hdd-4tb-1
+        size_mib: 0
+        start_mib: 0
+    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
+      wipe_table: true
+      partitions:
+      - number: 1
+        label: longhorn-hdd-4tb-2
+        size_mib: 0
+        start_mib: 0
 
   # Configure file systems and mount them on the previously configured hard drives
   filesystems:
     # Mount the root partition
     - path: /var
       device: /dev/disk/by-partlabel/var
-      format: ext4
+      format: btrfs
+      wipe_filesystem: true
+      with_mount_unit: true
+      options:
+        - --label=var
+
+    # Mount the additional hard drives
+    - path: /var/lib/longhorn/ssd1
+      device: /dev/disk/by-partlabel/longhorn-ssd-2tb-1
+      format: xfs
+      wipe_filesystem: true
+      with_mount_unit: true
+    - path: /var/lib/longhorn/hdd1
+      device: /dev/disk/by-partlabel/longhorn-hdd-4tb-1
+      format: xfs
+      wipe_filesystem: true
+      with_mount_unit: true
+    - path: /var/lib/longhorn/hdd2
+      device: /dev/disk/by-partlabel/longhorn-hdd-4tb-2
+      format: xfs
       wipe_filesystem: true
       with_mount_unit: true
 
