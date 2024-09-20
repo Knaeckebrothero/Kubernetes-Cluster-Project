@@ -87,30 +87,36 @@ storage:
         label: var
     
     # Configure additional hard drives for Longhorn to use as storage
-    - device: /dev/sda
+    - device: /dev/disk/by-id/ssd2000
       wipe_table: true
       partitions:
       - size_mib: 0
         start_mib: 0
-        label: sda-ssd-1000
-    - device: /dev/sdb
+        label: "ssd.1.2000"
+    - device: /dev/disk/by-id/ssd1000
       wipe_table: true
       partitions:
       - size_mib: 0
         start_mib: 0
-        label: sdb-ssd-1000
+        label: "ssd.2.1000"
     - device: /dev/sdc
       wipe_table: true
       partitions:
       - size_mib: 0
         start_mib: 0
-        label: sdc-hdd-4000
+        label: sdc-hdd-2000
     - device: /dev/sdd
       wipe_table: true
       partitions:
       - size_mib: 0
         start_mib: 0
-        label: sdd-hdd-4000
+        label: sdd-hdd-1000
+    - device: /dev/sde
+      wipe_table: true
+      partitions:
+      - size_mib: 0
+        start_mib: 0
+        label: sde-hdd-1000
 
   # Configure file systems and mount them on the previously configured hard drives
   filesystems:

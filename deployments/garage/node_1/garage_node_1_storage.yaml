@@ -1,0 +1,43 @@
+# Deployment for a garage storage node
+# https://garagehq.deuxfleurs.fr/
+
+
+# Storage config for node 1
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: garage-metadata-node1
+  namespace: garage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: garage-data-node1-hdd1
+  namespace: garage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: garage-data-node1-hdd2
+  namespace: garage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-hdd
+  resources:
+    requests:
+      storage: 1Ti

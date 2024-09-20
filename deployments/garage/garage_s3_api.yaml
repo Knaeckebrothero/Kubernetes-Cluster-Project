@@ -1,0 +1,18 @@
+# Deployment for a garage storage node
+# https://garagehq.deuxfleurs.fr/
+
+
+# Loadbalancer service for the garage s3 api (all the deployments are using the same service)
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-s3
+  namespace: garage
+spec:
+  type: LoadBalancer
+  selector:
+    app: garage
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: 3900

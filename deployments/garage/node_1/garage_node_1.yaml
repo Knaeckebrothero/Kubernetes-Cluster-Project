@@ -1,0 +1,70 @@
+# Deployment for a garage storage node
+# https://garagehq.deuxfleurs.fr/
+
+
+# Deployment for node 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage-node1
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+      node: node1
+  template:
+    metadata:
+      labels:
+        app: garage
+        node: node1
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: server-node-1
+      containers:
+      - name: garage
+        image: docker.io/library/dxflrs/garage:v1.0.0
+        ports:
+        - containerPort: 3900
+        - containerPort: 3901
+        volumeMounts:
+        - name: garage-config
+          mountPath: /etc/garage.toml
+          subPath: garage.toml
+        - name: garage-metadata
+          mountPath: /var/lib/garage/meta
+        - name: garage-data-hdd1
+          mountPath: /var/lib/garage/hdd1
+        - name: garage-data-hdd2
+          mountPath: /var/lib/garage/hdd2
+      volumes:
+      - name: garage-config
+        configMap:
+          name: garage-config-node1
+      - name: garage-metadata
+        persistentVolumeClaim:
+          claimName: garage-metadata-node1
+      - name: garage-data-hdd1
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd1
+      - name: garage-data-hdd2
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-node1
+  namespace: garage
+spec:
+  selector:
+    app: garage
+    node: node1
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: 3900
+    - name: rpc
+      port: 3901
+      targetPort: 3901
