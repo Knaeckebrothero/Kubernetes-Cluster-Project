@@ -1,6 +1,6 @@
 # Use butane to generate the ignition file
 # Windows command: butane --pretty --strict config.bu --output config.ign
-# Configuration for the second server node
+# Configuration for the third server node
 variant: fcos
 version: 1.5.0
 
@@ -10,11 +10,7 @@ passwd:
     # CoreOS user with sudo privileges and SSH key for remote access
     - name: core 
       ssh_authorized_keys:
-        - <SSH_PUBLIC_KEY>
-    
-    # Additional service users
-    - name: node_exporter_user
-      system: true
+        - ssh-ed25519 <SSH KEY>
 
 # System services configuration
 systemd:
@@ -25,7 +21,7 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup daily reboot timer (reboots at 02:30 every day, gmt timezone)
+    # Setup daily reboot timer (reboots every day, gmt timezone)
     - name: daily-restart.timer
       enabled: true
       contents: |
@@ -66,7 +62,7 @@ systemd:
         Type=oneshot
         # Use this for the second node to join the cluster     
         Environment="INSTALL_K3S_EXEC=server --server https://192.168.1.101:6443 --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.102"
-        Environment="K3S_TOKEN=<TOKEN_GOES_HERE>"
+        Environment="K3S_TOKEN=<TOKEN>"
         ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
         RemainAfterExit=true
 
@@ -100,67 +96,71 @@ storage:
       partitions:
       - number: 4 # This is the root partition where the OS is installed
         label: root
-        size_mib: 32768 # At least 8192
+        size_mib: 16384 # At least 8192
         resize: true
       - size_mib: 0 # This is the var partition, which will take up the rest of the disk
         label: var
     
-    # Configure additional hard drives for Longhorn to use as storage
-    - device: /dev/sdb
+    # Configure the additional storage
+    - device: /dev/disk/by-id/wwn-<WWN>
       wipe_table: true
       partitions:
-      - size_mib: 0
+      - number: 1
+        label: ssd-1tb-1
+        size_mib: 0
         start_mib: 0
-        label: sdb-ssd-2000
-    - device: /dev/sdc
+    - device: /dev/disk/by-id/wwn-<WWN>
       wipe_table: true
       partitions:
-      - size_mib: 0
+      - number: 1
+        label: ssd-1tb-2
+        size_mib: 0
         start_mib: 0
-        label: sdc-hdd-1000
-    - device: /dev/sdd
-      wipe_table: true
+    
+    # Configure the harddrives for garage object storage
+    # Since these are bigger than 2tb, they need to be formatted manually before the installation
+    - device: /dev/disk/by-id/wwn-<WWN>
+      wipe_table: false
       partitions:
-      - size_mib: 0
-        start_mib: 0
-        label: sdd-hdd-2000
-    - device: /dev/sde
-      wipe_table: true
+      - number: 1
+        label: hdd-4tb-1
+    - device: /dev/disk/by-id/wwn-<WWN>
+      wipe_table: false
       partitions:
-      - size_mib: 0
-        start_mib: 0
-        label: sde-hdd-1000
+      - number: 1
+        label: hdd-4tb-2
 
   # Configure file systems and mount them on the previously configured hard drives
   filesystems:
     # Mount the root partition
     - path: /var
       device: /dev/disk/by-partlabel/var
-      format: ext4
+      format: xfs
       wipe_filesystem: true
       with_mount_unit: true
-  
+
     # Mount the additional hard drives
-    - path: /var/lib/longhorn/sdb-ssd-2000
-      device: /dev/disk/by-partlabel/sdb-ssd-2000
-      format: ext4
+    - path: /var/lib/longhorn/ssd1
+      device: /dev/disk/by-partlabel/ssd-1tb-1
+      format: xfs
       wipe_filesystem: true
       with_mount_unit: true
-    - path: /var/lib/longhorn/sdc-hdd-1000
-      device: /dev/disk/by-partlabel/sdc-hdd-1000
-      format: ext4
+    - path: /var/lib/longhorn/ssd2
+      device: /dev/disk/by-partlabel/ssd-1tb-2
+      format: xfs
       wipe_filesystem: true
       with_mount_unit: true
-    - path: /var/lib/longhorn/sdd-hdd-2000
-      device: /dev/disk/by-partlabel/sdd-hdd-2000
-      format: ext4
-      wipe_filesystem: true
+
+    # Mount the harddrives for garage object storage
+    # Again we do not whipe them since they have been formatted pre installation
+    - path: /var/lib/longhorn/hdd1
+      device: /dev/disk/by-partlabel/hdd-4tb-1
+      format: xfs
       with_mount_unit: true
-    - path: /var/lib/longhorn/sde-hdd-1000
-      device: /dev/disk/by-partlabel/sde-hdd-1000
-      format: ext4
-      wipe_filesystem: true
-      with_mount_unit: true 
+    - path: /var/lib/longhorn/hdd2
+      device: /dev/disk/by-partlabel/hdd-4tb-2
+      format: xfs
+      with_mount_unit: true
 
   # Create directories
   directories:
@@ -173,7 +173,7 @@ storage:
     - path: /etc/hostname
       mode: 0644
       contents:
-        inline: server-node-2
+        inline: node2
 
     # Confiure a longer shutdown timeout
     - path: /etc/systemd/system.conf.d/90-custom.conf

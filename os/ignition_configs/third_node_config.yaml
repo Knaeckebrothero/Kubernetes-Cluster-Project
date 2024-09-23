@@ -10,7 +10,7 @@ passwd:
     # CoreOS user with sudo privileges and SSH key for remote access
     - name: core 
       ssh_authorized_keys:
-        - <SSH_PUBLIC_KEY>
+        - ssh-ed25519 <SSH KEY>
 
 # System services configuration
 systemd:
@@ -21,7 +21,7 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup daily reboot timer (reboots at 03:00 every day, gmt timezone)
+    # Setup daily reboot timer (reboots every day, gmt timezone)
     - name: daily-restart.timer
       enabled: true
       contents: |
@@ -29,7 +29,7 @@ systemd:
         Description=Daily Restart
 
         [Timer]
-        OnCalendar=*-*-* 03:00:00
+        OnCalendar=*-*-* 02:45:00
         Persistent=true
 
         [Install]
@@ -62,7 +62,7 @@ systemd:
         Type=oneshot
         # Use this for the third node to join the cluster     
         Environment="INSTALL_K3S_EXEC=server --server https://192.168.1.101:6443 --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.103"
-        Environment="K3S_TOKEN=<TOKEN_GOES_HERE>"
+        Environment="K3S_TOKEN=<TOKEN>"
         ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
         RemainAfterExit=true
 
@@ -96,60 +96,58 @@ storage:
       partitions:
       - number: 4 # This is the root partition where the OS is installed
         label: root
-        size_mib: 32768 # At least 8192
+        size_mib: 16384 # At least 8192
         resize: true
       - size_mib: 0 # This is the var partition, which will take up the rest of the disk
         label: var
+
+    # Configure the additional storage
+    - device: /dev/disk/by-id/wwn-<WWN>
+      wipe_table: true
+      partitions:
+      - number: 1
+        label: ssd-2tb-1
+        size_mib: 0
+        start_mib: 0
     
-    # Configure the additional hard drive for the var partition
-    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
-      wipe_table: true
+    # Configure the harddrives for garage object storage
+    # Since these are bigger than 2tb, they need to be formatted manually before the installation
+    - device: /dev/disk/by-id/wwn-<WWN>
+      wipe_table: false
       partitions:
       - number: 1
-        label: longhorn-ssd-2tb-1
-        size_mib: 0
-        start_mib: 0
-    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
-      wipe_table: true
+        label: hdd-4tb-1
+    - device: /dev/disk/by-id/wwn-<WWN>
+      wipe_table: false
       partitions:
       - number: 1
-        label: longhorn-hdd-4tb-1
-        size_mib: 0
-        start_mib: 0
-    - device: /dev/disk/by-id/wwn-<WWN_GOES_HERE>
-      wipe_table: true
-      partitions:
-      - number: 1
-        label: longhorn-hdd-4tb-2
-        size_mib: 0
-        start_mib: 0
+        label: hdd-4tb-2
 
   # Configure file systems and mount them on the previously configured hard drives
   filesystems:
     # Mount the root partition
     - path: /var
       device: /dev/disk/by-partlabel/var
-      format: btrfs
+      format: xfs
       wipe_filesystem: true
       with_mount_unit: true
-      options:
-        - --label=var
 
     # Mount the additional hard drives
     - path: /var/lib/longhorn/ssd1
-      device: /dev/disk/by-partlabel/longhorn-ssd-2tb-1
+      device: /dev/disk/by-partlabel/ssd-2tb-1
       format: xfs
       wipe_filesystem: true
       with_mount_unit: true
+
+    # Mount the harddrives for garage object storage
+    # Again we do not whipe them since they have been formatted pre installation
     - path: /var/lib/longhorn/hdd1
-      device: /dev/disk/by-partlabel/longhorn-hdd-4tb-1
+      device: /dev/disk/by-partlabel/hdd-4tb-1
       format: xfs
-      wipe_filesystem: true
       with_mount_unit: true
     - path: /var/lib/longhorn/hdd2
-      device: /dev/disk/by-partlabel/longhorn-hdd-4tb-2
+      device: /dev/disk/by-partlabel/hdd-4tb-2
       format: xfs
-      wipe_filesystem: true
       with_mount_unit: true
 
   # Create directories
@@ -163,7 +161,7 @@ storage:
     - path: /etc/hostname
       mode: 0644
       contents:
-        inline: server-node-3
+        inline: node3
 
     # Confiure a longer shutdown timeout
     - path: /etc/systemd/system.conf.d/90-custom.conf
