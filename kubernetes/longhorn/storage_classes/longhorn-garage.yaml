@@ -3,8 +3,8 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
-    field.cattle.io/description: Storage class for hdd drives.
-  creationTimestamp: '2024-09-09T19:01:21Z'
+    field.cattle.io/description: A storage class for the garage block data.
+  creationTimestamp: '2024-09-24T08:35:39Z'
   managedFields:
     - apiVersion: storage.k8s.io/v1
       fieldsType: FieldsV1
@@ -24,14 +24,14 @@ metadata:
         f:volumeBindingMode: {}
       manager: rancher
       operation: Update
-      time: '2024-09-09T19:01:21Z'
-  name: longhorn-hdd
-  resourceVersion: '84599'
-  uid: b3e06d4c-04a8-40b6-9450-6f7c8f79ef68
+      time: '2024-09-24T08:35:39Z'
+  name: longhorn-garage
+  resourceVersion: '5964013'
+  uid: e15622df-990d-481f-804e-bfc7fe16c02d
 parameters:
-  dataLocality: disabled
-  diskSelector: hdd
-  numberOfReplicas: '2'
+  dataLocality: strict-local
+  diskSelector: garage
+  numberOfReplicas: '1'
 provisioner: driver.longhorn.io
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 volumeBindingMode: Immediate

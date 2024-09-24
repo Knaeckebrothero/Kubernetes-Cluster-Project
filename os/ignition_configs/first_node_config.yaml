@@ -200,7 +200,7 @@ storage:
         inline: |
           [Manager]
           DefaultTimeoutStopSec=600s
-          DefaultTimeoutStartSec=180s
+          DefaultTimeoutStartSec=300s
 
     # Config file for zincati
     - path: /etc/zincati/config.d/90-custom.toml

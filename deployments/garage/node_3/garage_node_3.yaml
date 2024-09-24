@@ -2,26 +2,26 @@
 # https://garagehq.deuxfleurs.fr/
 
 
-# Deployment for node 1
+# Deployment for node 3
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: garage-1
+  name: garage-3
   namespace: garage
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: garage
-      node: node1
+      node: node3
   template:
     metadata:
       labels:
         app: garage
-        node: node1
+        node: node3
     spec:
       nodeSelector:
-        kubernetes.io/hostname: node1
+        kubernetes.io/hostname: node3
       containers:
       - name: garage
         image: docker.io/dxflrs/garage:v1.0.1
@@ -45,39 +45,29 @@ spec:
           mountPath: /var/lib/garage/data/hdd1
         - name: garage-data-hdd2
           mountPath: /var/lib/garage/data/hdd2
-        - name: garage-data-hdd3
-          mountPath: /var/lib/garage/data/hdd3
-        - name: garage-data-hdd4
-          mountPath: /var/lib/garage/data/hdd4
       volumes:
       - name: garage-config
         configMap:
-          name: garage-config-node1
+          name: garage-config-node3
       - name: garage-metadata
         persistentVolumeClaim:
-          claimName: garage-metadata-node1
+          claimName: garage-metadata-node3
       - name: garage-data-hdd1
         persistentVolumeClaim:
-          claimName: garage-data-node1-hdd1
+          claimName: garage-data-node3-hdd1
       - name: garage-data-hdd2
         persistentVolumeClaim:
-          claimName: garage-data-node1-hdd2
-      - name: garage-data-hdd3
-        persistentVolumeClaim:
-          claimName: garage-data-node1-hdd3
-      - name: garage-data-hdd4
-        persistentVolumeClaim:
-          claimName: garage-data-node1-hdd4
+          claimName: garage-data-node3-hdd2
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: garage-1
+  name: garage-3
   namespace: garage
 spec:
   selector:
     app: garage
-    node: node1
+    node: node3
   ports:
     - name: s3
       port: 3900

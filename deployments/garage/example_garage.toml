@@ -7,8 +7,10 @@ consistency_mode = "consistent"
 
 metadata_dir = "/var/lib/garage/meta"
 data_dir = [
-    { path = "/var/lib/garage/data/hdd1", capacity = "3T" },
-    { path = "/var/lib/garage/data/hdd1", capacity = "3T" },
+    { path = "/var/lib/garage/data/hdd1", capacity = "3500G" },
+    { path = "/var/lib/garage/data/hdd2", capacity = "1750G" },
+    { path = "/var/lib/garage/data/hdd3", capacity = "875G" },
+    { path = "/var/lib/garage/data/hdd4", capacity = "875G" },
 ]
 metadata_fsync = false
 data_fsync = false
@@ -35,25 +37,23 @@ rpc_public_addr = "[fc00:1::1]:3901"
 allow_world_readable_secrets = false
 
 bootstrap_peers = [
-    "563e1ac825ee3323aa441e72c26d1030d6d4414aeb3dd25287c531e7fc2bc95d@[fc00:1::1]:3901",
-    "86f0f26ae4afbd59aaf9cfb059eefac844951efd5b8caeec0d53f4ed6c85f332@[fc00:1::2]:3901",
-    "681456ab91350f92242e80a531a3ec9392cb7c974f72640112f90a600d7921a4@[fc00:B::1]:3901",
-    "212fd62eeaca72c122b45a7f4fa0f55e012aa5e24ac384a72a3016413fa724ff@[fc00:F::1]:3901",
+    "garage-node1.garage:3901",
+    "garage-node2.garage:3901",
+    "garage-node3.garage:3901"
 ]
 
-
-[consul_discovery]
-api = "catalog"
-consul_http_addr = "http://127.0.0.1:8500"
-service_name = "garage-daemon"
-ca_cert = "/etc/consul/consul-ca.crt"
-client_cert = "/etc/consul/consul-client.crt"
-client_key = "/etc/consul/consul-key.crt"
+#[consul_discovery]
+#api = "catalog"
+#consul_http_addr = "http://127.0.0.1:8500"
+#service_name = "garage-daemon"
+#ca_cert = "/etc/consul/consul-ca.crt"
+#client_cert = "/etc/consul/consul-client.crt"
+#client_key = "/etc/consul/consul-key.crt"
 # for `agent` API mode, unset client_cert and client_key, and optionally enable `token`
 # token = "abcdef-01234-56789"
-tls_skip_verify = false
-tags = [ "dns-enabled" ]
-meta = { dns-acl = "allow trusted" }
+#tls_skip_verify = false
+#tags = [ "dns-enabled" ]
+#meta = { dns-acl = "allow trusted" }
 
 
 [kubernetes_discovery]
@@ -65,14 +65,9 @@ skip_crd = false
 [s3_api]
 api_bind_addr = "[::]:3900"
 s3_region = "garage"
-root_domain = ".s3.garage"
 
-[s3_web]
-bind_addr = "[::]:3902"
-root_domain = ".web.garage"
-
-[admin]
-api_bind_addr = "0.0.0.0:3903"
-metrics_token = "BCAdFjoa9G0KJR0WXnHHm7fs1ZAbfpI8iIZ+Z/a2NgI="
-admin_token = "UkLeGWEvHnXBqnueR3ISEMWpOnm40jH2tM2HnnL/0F4="
-trace_sink = "http://localhost:4317"
+#[admin]
+#api_bind_addr = "0.0.0.0:3903"
+#metrics_token = "BCAdFjoa9G0KJR0WXnHHm7fs1ZAbfpI8iIZ+Z/a2NgI="
+#admin_token = "UkLeGWEvHnXBqnueR3ISEMWpOnm40jH2tM2HnnL/0F4="
+#trace_sink = "http://localhost:4317"

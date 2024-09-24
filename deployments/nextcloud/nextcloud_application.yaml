@@ -93,7 +93,7 @@ spec:
         - name: NEXTCLOUD_DATA_DIR
           value: /var/data
         - name: NEXTCLOUD_INIT_HTACCESS
-          value: true
+          value: "true"
 
         # Apache settings
         - name: APACHE_DISABLE_REWRITE_IP

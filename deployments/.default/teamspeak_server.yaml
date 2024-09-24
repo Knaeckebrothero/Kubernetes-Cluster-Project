@@ -10,14 +10,14 @@ metadata:
   name: teamspeak-pvc
   namespace: default
   annotations:
-    longhornio/number-of-replicas: "2"
+    longhornio/number-of-replicas: "1"
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: longhorn-ssd
   resources:
     requests:
-      storage: 5Gi
+      storage: 8Gi
 ---
 # Deployment for the Teamspeak Server
 apiVersion: apps/v1
@@ -48,7 +48,7 @@ spec:
             cpu: 100m
             memory: 128Mi
           limits:
-            cpu: 500m
+            cpu: 250m
             memory: 512Mi
         env:
         - name: TS3SERVER_QUERY_PROTOCOLS
@@ -64,6 +64,15 @@ spec:
       - name: teamspeak-data
         persistentVolumeClaim:
           claimName: teamspeak-pvc
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node1
 ---
 # LoadBalancer to expose the Teamspeak Server ports (important for UDP!!!)
 apiVersion: v1

@@ -2,36 +2,32 @@ allowVolumeExpansion: true
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  annotations:
-    field.cattle.io/description: A storage class to be used with the minio object store.
-  creationTimestamp: '2024-09-17T13:11:54Z'
+  creationTimestamp: '2024-09-24T08:17:10Z'
   managedFields:
     - apiVersion: storage.k8s.io/v1
       fieldsType: FieldsV1
       fieldsV1:
         f:allowVolumeExpansion: {}
-        f:metadata:
-          f:annotations:
-            .: {}
-            f:field.cattle.io/description: {}
         f:parameters:
           .: {}
           f:dataLocality: {}
           f:diskSelector: {}
           f:numberOfReplicas: {}
+          f:staleReplicaTimeout: {}
         f:provisioner: {}
         f:reclaimPolicy: {}
         f:volumeBindingMode: {}
       manager: rancher
       operation: Update
-      time: '2024-09-17T13:11:54Z'
-  name: longhorn-minio-hdd
-  resourceVersion: '3972042'
-  uid: d15409b6-781b-45c3-97ae-971eb0f31f1b
+      time: '2024-09-24T08:17:10Z'
+  name: longhorn-m2
+  resourceVersion: '5957227'
+  uid: b35a91fe-406d-4f86-aef8-310f709574c5
 parameters:
   dataLocality: best-effort
-  diskSelector: hdd
+  diskSelector: m2
   numberOfReplicas: '1'
+  staleReplicaTimeout: '2880'
 provisioner: driver.longhorn.io
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
