@@ -31,9 +31,9 @@ data:
     rpc_public_addr = "garage-3:3901"
 
     bootstrap_peers = [
-        "garage-1:3901",
-        "garage-2:3901",
-        "garage-3:3901"
+      "6630b9b3a6238db0@garage-1.garage:3901",
+      "6bf2e8c7172daba3@garage-2.garage:3901",
+      "e06ec81aa75bc5e9@garage-3.garage:3901"
     ]
 
     [s3_api]

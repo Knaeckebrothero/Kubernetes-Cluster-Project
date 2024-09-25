@@ -2,11 +2,11 @@
 # https://garagehq.deuxfleurs.fr/
 
 
-# ConfigMap for node 1
+# ConfigMap for node 2
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: garage-config-node1
+  name: garage-config-node2
   namespace: garage
 data:
   garage.toml: |
@@ -16,9 +16,7 @@ data:
     metadata_dir = "/var/lib/garage/meta"
     data_dir = [
         { path = "/var/lib/garage/data/hdd1", capacity = "3500G" },
-        { path = "/var/lib/garage/data/hdd2", capacity = "1750G" },
-        { path = "/var/lib/garage/data/hdd3", capacity = "875G" },
-        { path = "/var/lib/garage/data/hdd4", capacity = "875G" },
+        { path = "/var/lib/garage/data/hdd2", capacity = "3500G" },
     ]
 
     db_engine = "lmdb"
@@ -30,16 +28,13 @@ data:
 
     rpc_secret = "a23110c37286ebeecabd6ca4e5f2b6cb0d0344f5f09338fc4cb2bc34a1665682"
     rpc_bind_addr = "[::]:3901"
-    rpc_public_addr = "garage-1:3901"
+    rpc_public_addr = "garage-2"
 
     bootstrap_peers = [
-        "6630b9b3a6238db0@garage-1:3901",
-        "garage-2:3901",
-        "garage-3:3901"
+      "6630b9b3a6238db0@garage-1.garage:3901",
+      "6bf2e8c7172daba3@garage-2.garage:3901",
+      "e06ec81aa75bc5e9@garage-3.garage:3901"
     ]
-
-    [kubernetes_discovery]
-    namespace = "garage"
 
     [s3_api]
     api_bind_addr = "0.0.0.0:3900"

@@ -1,0 +1,36 @@
+# RBAC configuration for the Garage CRD
+# https://garagehq.deuxfleurs.fr/
+
+# Create a ServiceAccount for the Garage CRD
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: garage-sa
+  namespace: garage
+---
+# Create a ClusterRole and ClusterRoleBinding for the Garage CRD
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: garage-role
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "get", "patch"]
+- apiGroups: ["deuxfleurs.fr"]
+  resources: ["garagenodes"]
+  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+---
+# Bind the ServiceAccount to the ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: garage-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: garage-sa
+  namespace: garage
+roleRef:
+  kind: ClusterRole
+  name: garage-role
+  apiGroup: rbac.authorization.k8s.io

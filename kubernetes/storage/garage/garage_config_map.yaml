@@ -1,0 +1,156 @@
+# ConfigMap for a garage storage node
+# https://garagehq.deuxfleurs.fr/
+
+
+# ConfigMap for node 1
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garage-config-node1
+  namespace: garage
+data:
+  garage.toml: |
+    replication_factor = 3
+    consistency_mode = "consistent"
+
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = [
+        { path = "/var/lib/garage/data/hdd1", capacity = "3500G" },
+        { path = "/var/lib/garage/data/hdd2", capacity = "1750G" },
+        { path = "/var/lib/garage/data/hdd3", capacity = "875G" },
+        { path = "/var/lib/garage/data/hdd4", capacity = "875G" },
+    ]
+
+    db_engine = "lmdb"
+    compression_level = 5
+    block_size = "1MiB"
+    block_ram_buffer_max = "256MiB"
+    lmdb_map_size = "1TiB"
+    metadata_auto_snapshot_interval = "6h"
+
+    rpc_secret = "a23110c37286ebeecabd6ca4e5f2b6cb0d0344f5f09338fc4cb2bc34a1665682"
+    rpc_bind_addr = "0.0.0.0:3901"
+    # rpc_public_addr = "192.168.1.101:3901"
+    # rpc_public_addr = "$(MY_POD_IP):3901"
+    rpc_public_addr = "garage-1:3901"
+    rpc_bind_outgoing = true
+
+    bootstrap_peers = [
+        "garage-1:3901",
+        "garage-2:3901",
+        "garage-3:3901",
+    ]
+
+    [s3_api]
+    api_bind_addr = "0.0.0.0:3900"
+    s3_region = "garage"
+    root_domain = ".s3.garage"
+
+    [s3_web]
+    bind_addr = "0.0.0.0:3902"
+    root_domain = ".web.garage"
+
+    [admin]
+    api_bind_addr = "0.0.0.0:3903"
+    metrics_token = "5g6Q9jRG1Vns48V9EwmgROUKeDMJSUMZgIqn8CRy8Sw1"
+    admin_token = "YDopSvkw9UwOUVMZO4mQA1T2cPudUIElrqDcrGPSqQ83"
+---
+# ConfigMap for node 2
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garage-config-node2
+  namespace: garage
+data:
+  garage.toml: |
+    replication_factor = 3
+    consistency_mode = "consistent"
+
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = [
+        { path = "/var/lib/garage/data/hdd1", capacity = "3500G" },
+        { path = "/var/lib/garage/data/hdd2", capacity = "3500G" },
+    ]
+
+    db_engine = "lmdb"
+    compression_level = 5
+    block_size = "1MiB"
+    block_ram_buffer_max = "256MiB"
+    lmdb_map_size = "1TiB"
+    metadata_auto_snapshot_interval = "6h"
+
+    rpc_secret = "a23110c37286ebeecabd6ca4e5f2b6cb0d0344f5f09338fc4cb2bc34a1665682"
+    rpc_bind_addr = "0.0.0.0:3901"
+    # rpc_public_addr = "192.168.1.102:3901"
+    # rpc_public_addr = "$(MY_POD_IP):3901"
+    rpc_public_addr = "garage-2:3901"
+
+    bootstrap_peers = [
+        "garage-1:3901",
+        "garage-2:3901",
+        "garage-3:3901",
+    ]
+
+    [s3_api]
+    api_bind_addr = "0.0.0.0:3900"
+    s3_region = "garage"
+    root_domain = ".s3.garage"
+
+    [s3_web]
+    bind_addr = "0.0.0.0:3902"
+    root_domain = ".web.garage"
+
+    [admin]
+    api_bind_addr = "0.0.0.0:3903"
+    metrics_token = "5g6Q9jRG1Vns48V9EwmgROUKeDMJSUMZgIqn8CRy8Sw1"
+    admin_token = "YDopSvkw9UwOUVMZO4mQA1T2cPudUIElrqDcrGPSqQ83"
+---
+# ConfigMap for node 3
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garage-config-node3
+  namespace: garage
+data:
+  garage.toml: |
+    replication_factor = 3
+    consistency_mode = "consistent"
+
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = [
+        { path = "/var/lib/garage/data/hdd1", capacity = "3500G" },
+        { path = "/var/lib/garage/data/hdd2", capacity = "3500G" },
+    ]
+
+    db_engine = "lmdb"
+    compression_level = 5
+    block_size = "1MiB"
+    block_ram_buffer_max = "256MiB"
+    lmdb_map_size = "1TiB"
+    metadata_auto_snapshot_interval = "6h"
+
+    rpc_secret = "a23110c37286ebeecabd6ca4e5f2b6cb0d0344f5f09338fc4cb2bc34a1665682"
+    rpc_bind_addr = "0.0.0.0:3901"
+    # rpc_public_addr = "192.168.1.103:3901"
+    # rpc_public_addr = "$(MY_POD_IP):3901"
+    rpc_public_addr = "garage-3:3901"
+
+    bootstrap_peers = [
+        "garage-1:3901",
+        "garage-2:3901",
+        "garage-3:3901",
+    ]
+
+    [s3_api]
+    api_bind_addr = "0.0.0.0:3900"
+    s3_region = "garage"
+    root_domain = ".s3.garage"
+
+    [s3_web]
+    bind_addr = "0.0.0.0:3902"
+    root_domain = ".web.garage"
+
+    [admin]
+    api_bind_addr = "0.0.0.0:3903"
+    metrics_token = "5g6Q9jRG1Vns48V9EwmgROUKeDMJSUMZgIqn8CRy8Sw1"
+    admin_token = "YDopSvkw9UwOUVMZO4mQA1T2cPudUIElrqDcrGPSqQ83"

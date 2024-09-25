@@ -1,0 +1,280 @@
+# Deployment for a garage storage node
+# https://garagehq.deuxfleurs.fr/
+
+
+# Deployment for node 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage-1
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+      node: node1
+  template:
+    metadata:
+      labels:
+        app: garage
+        node: node1
+    spec:
+      serviceAccountName: garage-sa
+      nodeSelector:
+        kubernetes.io/hostname: node1
+      containers:
+      - name: garage
+        image: docker.io/dxflrs/garage:v1.0.1
+        ports:
+        - containerPort: 3900
+        - containerPort: 3901
+        - containerPort: 3902
+        - containerPort: 3903
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 4Gi
+        volumeMounts:
+        - name: garage-config
+          mountPath: /etc/garage.toml
+          subPath: garage.toml
+        - name: garage-metadata
+          mountPath: /var/lib/garage/meta
+        - name: garage-data-hdd1
+          mountPath: /var/lib/garage/data/hdd1
+        - name: garage-data-hdd2
+          mountPath: /var/lib/garage/data/hdd2
+        - name: garage-data-hdd3
+          mountPath: /var/lib/garage/data/hdd3
+        - name: garage-data-hdd4
+          mountPath: /var/lib/garage/data/hdd4
+      volumes:
+      - name: garage-config
+        configMap:
+          name: garage-config-node1
+      - name: garage-metadata
+        persistentVolumeClaim:
+          claimName: garage-metadata-node1
+      - name: garage-data-hdd1
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd1
+      - name: garage-data-hdd2
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd2
+      - name: garage-data-hdd3
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd3
+      - name: garage-data-hdd4
+        persistentVolumeClaim:
+          claimName: garage-data-node1-hdd4
+---
+# Deployment for node 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage-2
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+      node: node2
+  template:
+    metadata:
+      labels:
+        app: garage
+        node: node2
+    spec:
+      serviceAccountName: garage-sa
+      nodeSelector:
+        kubernetes.io/hostname: node2
+      containers:
+      - name: garage
+        image: docker.io/dxflrs/garage:v1.0.1
+        ports:
+        - containerPort: 3900
+        - containerPort: 3901
+        - containerPort: 3902
+        - containerPort: 3903
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 4Gi
+        volumeMounts:
+        - name: garage-config
+          mountPath: /etc/garage.toml
+          subPath: garage.toml
+        - name: garage-metadata
+          mountPath: /var/lib/garage/meta
+        - name: garage-data-hdd1
+          mountPath: /var/lib/garage/data/hdd1
+        - name: garage-data-hdd2
+          mountPath: /var/lib/garage/data/hdd2
+      volumes:
+      - name: garage-config
+        configMap:
+          name: garage-config-node2
+      - name: garage-metadata
+        persistentVolumeClaim:
+          claimName: garage-metadata-node2
+      - name: garage-data-hdd1
+        persistentVolumeClaim:
+          claimName: garage-data-node2-hdd1
+      - name: garage-data-hdd2
+        persistentVolumeClaim:
+          claimName: garage-data-node2-hdd2
+---
+# Deployment for node 3
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garage-3
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+      node: node3
+  template:
+    metadata:
+      labels:
+        app: garage
+        node: node3
+    spec:
+      serviceAccountName: garage-sa
+      nodeSelector:
+        kubernetes.io/hostname: node3
+      containers:
+      - name: garage
+        image: docker.io/dxflrs/garage:v1.0.1
+        ports:
+        - containerPort: 3900
+        - containerPort: 3901
+        - containerPort: 3902
+        - containerPort: 3903
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 4Gi
+        volumeMounts:
+        - name: garage-config
+          mountPath: /etc/garage.toml
+          subPath: garage.toml
+        - name: garage-metadata
+          mountPath: /var/lib/garage/meta
+        - name: garage-data-hdd1
+          mountPath: /var/lib/garage/data/hdd1
+        - name: garage-data-hdd2
+          mountPath: /var/lib/garage/data/hdd2
+      volumes:
+      - name: garage-config
+        configMap:
+          name: garage-config-node3
+      - name: garage-metadata
+        persistentVolumeClaim:
+          claimName: garage-metadata-node3
+      - name: garage-data-hdd1
+        persistentVolumeClaim:
+          claimName: garage-data-node3-hdd1
+      - name: garage-data-hdd2
+        persistentVolumeClaim:
+          claimName: garage-data-node3-hdd2
+---
+# Service for node 1
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-1
+  namespace: garage
+spec:
+  selector:
+    app: garage
+    node: node1
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: 3900
+    - name: rpc
+      port: 3901
+      targetPort: 3901
+    - name: web
+      port: 3902
+      targetPort: 3902
+    - name: admin
+      port: 3903
+      targetPort: 3903
+---
+# Service for node 2
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-2
+  namespace: garage
+spec:
+  selector:
+    app: garage
+    node: node2
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: 3900
+    - name: rpc
+      port: 3901
+      targetPort: 3901
+    - name: web
+      port: 3902
+      targetPort: 3902
+    - name: admin
+      port: 3903
+      targetPort: 3903
+---
+# Service for node 3
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage-3
+  namespace: garage
+spec:
+  selector:
+    app: garage
+    node: node3
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: 3900
+    - name: rpc
+      port: 3901
+      targetPort: 3901
+    - name: web
+      port: 3902
+      targetPort: 3902
+    - name: admin
+      port: 3903
+      targetPort: 3903

@@ -2,7 +2,7 @@
 # https://garagehq.deuxfleurs.fr/
 
 
-# Deployment for node 1
+# Deployment for node 2
 apiVersion: apps/v1
 kind: Deployment
 metadata:

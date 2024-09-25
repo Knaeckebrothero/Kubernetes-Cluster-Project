@@ -51,3 +51,120 @@ consoleIngress:
     - secretName: minio-console-local-tls
       hosts:
         - minio.local
+
+
+
+
+operator:
+  additionalLabels: {}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: name
+                operator: In
+                values:
+                  - minio-operator
+          topologyKey: kubernetes.io/hostname
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  env:
+    - name: OPERATOR_STS_ENABLED
+      value: 'on'
+  image:
+    pullPolicy: IfNotPresent
+    repository: quay.io/minio/operator
+    tag: v6.0.3
+  imagePullSecrets: []
+  initContainers: []
+  nodeSelector: {}
+  priorityClassName: ''
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      ephemeral-storage: 500Mi
+      memory: 256Mi
+  runtimeClassName: null
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountAnnotations: []
+  sidecarImage: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  volumeMounts: []
+  volumes: []
+  consoleIngress:
+    annotations:
+      cert-manager.io/issuer: minio
+      cert-manager.io/issuer-kind: Issuer
+      kubernetes.io/ingress.class: traefik
+    enabled: true
+    hosts:
+      - minio-operator.local
+    tls:
+      - hosts:
+          - minio-operator.local
+        secretName: minio-operator-console-tls
+  rootPassword: '12345'
+  rootUser: root
+global:
+  cattle:
+    systemProjectId: p-5d6pn
+tenants:
+  - affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: v1.min.io/tenant
+                  operator: In
+                  values:
+                    - minio
+            topologyKey: kubernetes.io/hostname
+    console:
+      ingress:
+        annotations:
+          cert-manager.io/issuer: minio
+          cert-manager.io/issuer-kind: Issuer
+          kubernetes.io/ingress.class: traefik
+        host: minio-tenant.local
+        tls: true
+    metrics:
+      enabled: true
+    name: minio
+    namespace: minio
+    pools:
+      - name: nvme-pool
+        servers: 2
+        size: 100Gi
+        storageClassName: longhorn-m2
+        volumesPerServer: 1
+      - name: hdd-pool
+        servers: 2
+        size: 1000Gi
+        storageClassName: longhorn-garage
+        volumesPerServer: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 4Gi
+      requests:
+        cpu: 250m
+        memory: 2Gi
+    users:
+      - accessKey: '12345'
+        name: minio-user
+        secretKey: '12345'
