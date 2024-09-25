@@ -3,58 +3,6 @@
 # https://min.io/
 
 
-mode: distributed
-replicas: 2
-
-# Server deployment configuration
-persistence:
-  enabled: true
-  storageClass: "longhorn-ssd"
-  size: 16Gi
-
-# Data volume configuration
-volumeClaimTemplate:
-  accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "longhorn-minio-hdd"
-  resources:
-    requests:
-      storage: 512Gi
-
-# Define the drives MinIO will use
-drives:
-  - /export/data{1...4}
-
-resources:
-  requests:
-    cpu: 250m
-    memory: 1Gi
-  limits:
-    cpu: 2000m
-    memory: 4Gi
-rootUser: "<USERNAME>"
-rootPassword: "<PASSWORD>"
-service:
-  type: ClusterIP # Makes it available at: minio.minio.svc.cluster.local (port 9000)
-ingress:
-  enabled: false  # Disabled the ingress since we only want to access it from within the cluster
-service:
-  type: ClusterIP
-consoleIngress:
-  enabled: true
-  annotations:
-    spec.ingressClassName: traefik
-    cert-manager.io/issuer: "minio"
-    cert-manager.io/issuer-kind: Issuer
-  hosts:
-    - minio.local
-  tls:
-    - secretName: minio-console-local-tls
-      hosts:
-        - minio.local
-
-
-
-
 operator:
   additionalLabels: {}
   affinity:
@@ -88,7 +36,7 @@ operator:
   initContainers: []
   nodeSelector: {}
   priorityClassName: ''
-  replicaCount: 2
+  replicaCount: 1
   resources:
     requests:
       cpu: 200m
@@ -106,65 +54,6 @@ operator:
   topologySpreadConstraints: []
   volumeMounts: []
   volumes: []
-  consoleIngress:
-    annotations:
-      cert-manager.io/issuer: minio
-      cert-manager.io/issuer-kind: Issuer
-      kubernetes.io/ingress.class: traefik
-    enabled: true
-    hosts:
-      - minio-operator.local
-    tls:
-      - hosts:
-          - minio-operator.local
-        secretName: minio-operator-console-tls
-  rootPassword: '12345'
-  rootUser: root
 global:
   cattle:
     systemProjectId: p-5d6pn
-tenants:
-  - affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: v1.min.io/tenant
-                  operator: In
-                  values:
-                    - minio
-            topologyKey: kubernetes.io/hostname
-    console:
-      ingress:
-        annotations:
-          cert-manager.io/issuer: minio
-          cert-manager.io/issuer-kind: Issuer
-          kubernetes.io/ingress.class: traefik
-        host: minio-tenant.local
-        tls: true
-    metrics:
-      enabled: true
-    name: minio
-    namespace: minio
-    pools:
-      - name: nvme-pool
-        servers: 2
-        size: 100Gi
-        storageClassName: longhorn-m2
-        volumesPerServer: 1
-      - name: hdd-pool
-        servers: 2
-        size: 1000Gi
-        storageClassName: longhorn-garage
-        volumesPerServer: 1
-    resources:
-      limits:
-        cpu: 500m
-        memory: 4Gi
-      requests:
-        cpu: 250m
-        memory: 2Gi
-    users:
-      - accessKey: '12345'
-        name: minio-user
-        secretKey: '12345'
