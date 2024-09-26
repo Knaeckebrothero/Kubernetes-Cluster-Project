@@ -1,5 +1,4 @@
 # A configuration file to override the default values of the MinIO Helm chart
-# helm install minio minio/minio -f minio-value-override.yaml -n minio
 # https://min.io/
 
 
@@ -36,10 +35,10 @@ operator:
   initContainers: []
   nodeSelector: {}
   priorityClassName: ''
-  replicaCount: 1
+  replicaCount: 2
   resources:
     requests:
-      cpu: 200m
+      cpu: 100m
       ephemeral-storage: 500Mi
       memory: 256Mi
   runtimeClassName: null

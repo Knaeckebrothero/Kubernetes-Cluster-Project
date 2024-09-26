@@ -26,7 +26,7 @@ lmdb_map_size = "1TiB"
 
 compression_level = 10
 
-rpc_secret = "a23110c37286ebeecabd6ca4e5f2b6cb0d0344f5f09338fc4cb2bc34a1665682"
+rpc_secret = "<RPC_SECRET>"
 rpc_bind_addr = "[::]:3901"
 rpc_bind_outgoing = false
 rpc_public_addr = "[fc00:1::1]:3901"

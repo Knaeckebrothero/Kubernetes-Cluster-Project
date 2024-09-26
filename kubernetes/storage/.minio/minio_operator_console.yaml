@@ -1,0 +1,44 @@
+# A configuration file to override the default values of the MinIO Helm chart
+# https://min.io/
+
+# MINIO OPERATOR CONSOLE IS DEPRECATED!!!
+# https://min.io/docs/minio/kubernetes/eks/operations/install-deploy-manage/minio-operator-console.html
+
+
+# Create secrets for the MinIO operator
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-console-secret
+  namespace: minio-operator
+type: Opaque
+stringData:
+  CONSOLE_ACCESS_KEY: <ADMIN_USERNAME>
+  CONSOLE_SECRET_KEY: <ADMIN_PASSWORD>
+
+
+  # MinIO gui configuration
+  console:
+    enabled: true
+    image:
+      repository: minio/console
+      tag: v0.19.6
+      pullPolicy: IfNotPresent
+    replicas: 1
+    rootUser: "<USERNAME>"
+    rootPassword: "<PASSWORD>"
+    service:
+      type: ClusterIP
+      port: 9090
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/issuer: "minio"
+        cert-manager.io/issuer-kind: Issuer
+      hosts:
+        - minio.local
+      tls:
+        - secretName: minio-console-local-tls
+          hosts:
+            - minio.local
