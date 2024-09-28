@@ -1,31 +1,9 @@
 # MinIO Tenant values for Nextcloud deployment
 # https://min.io/
+# https://github.com/minio/operator/tree/master/examples/kustomization/
 # kubectl kustomize https://github.com/minio/operator/examples/kustomization/base/ > tenant-base.yaml
 
-# Secret for the MinIO Tenant configuration
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: minio-storage-configuration
-  namespace: nextcloud
-data:
-  config.env: |-
-    export MINIO_ROOT_USER="minio"
-    export MINIO_ROOT_PASSWORD="minio123"
-    export MINIO_STORAGE_CLASS_STANDARD="EC:2"
-    export MINIO_BROWSER="on"
----
-# Secret for the MinIO Tenant user
-apiVersion: v1
-kind: Secret
-metadata:
-  name: minio-storage-user
-  namespace: nextcloud
-type: Opaque
-stringData:
-  CONSOLE_ACCESS_KEY: root
-  CONSOLE_SECRET_KEY: root123
----
+
 # MinIO Tenant configuration
 apiVersion: minio.min.io/v2
 kind: Tenant
@@ -105,11 +83,11 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 750Gi
+            storage: 3Ti
         storageClassName: longhorn-hdd-minio
       status: {}
     # Number of volumes per server
-    volumesPerServer: 3
+    volumesPerServer: 2
   priorityClassName: ""
   requestAutoCert: true
   serviceAccountName: ""

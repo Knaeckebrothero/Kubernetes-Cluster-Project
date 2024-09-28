@@ -21,7 +21,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nextcloud-main-pvc
+  name: nextcloud-pvc
   namespace: nextcloud
 spec:
   accessModes:
@@ -30,44 +30,3 @@ spec:
   resources:
     requests:
       storage: 16Gi
----
-# PersistentVolumeClaim for the Nextcloud application
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-data-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-ssd
-  resources:
-    requests:
-      storage: 1024Gi
----
-# StrorageClass for Longhorn ssd data
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-data-hdd1-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-hdd
-  resources:
-    requests:
-      storage: 1024Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-data-hdd2-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn-hdd
-  resources:
-    requests:
-      storage: 1024Gi

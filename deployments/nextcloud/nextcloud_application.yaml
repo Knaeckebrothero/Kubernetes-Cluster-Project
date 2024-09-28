@@ -40,14 +40,8 @@ spec:
           # Set maintenance window start
           php occ config:system:set maintenance_window_start --type=integer --value=1
         volumeMounts:
-        - name: nextcloud-main
+        - name: nextcloud-app
           mountPath: /var/www/html
-        - name: nextcloud-data
-          mountPath: /var/data
-        - name: nextcloud-data-hdd1
-          mountPath: /var/data/hdd1
-        - name: nextcloud-data-hdd2
-          mountPath: /var/data/hdd2
       securityContext:
         fsGroup: 33 # This is typically the www-data group ID
       containers:
@@ -90,8 +84,8 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: admin-password
-        - name: NEXTCLOUD_DATA_DIR
-          value: /var/data
+        #- name: NEXTCLOUD_DATA_DIR
+        #  value: /var/data
         - name: NEXTCLOUD_INIT_HTACCESS
           value: "true"
 
@@ -130,27 +124,12 @@ spec:
               name: nextcloud-secret
               key: redis-password
         volumeMounts:
-        - name: nextcloud-main
+        - name: nextcloud-app
           mountPath: /var/www/html
-        - name: nextcloud-data
-          mountPath: /var/data
-        - name: nextcloud-data-hdd1
-          mountPath: /var/data/hdd1
-        - name: nextcloud-data-hdd2
-          mountPath: /var/data/hdd2
       volumes:
-      - name: nextcloud-main
+      - name: nextcloud-app
         persistentVolumeClaim:
-          claimName: nextcloud-main-pvc
-      - name: nextcloud-data
-        persistentVolumeClaim:
-          claimName: nextcloud-data-pvc
-      - name: nextcloud-data-hdd1
-        persistentVolumeClaim:
-          claimName: nextcloud-data-hdd1-pvc
-      - name: nextcloud-data-hdd2
-        persistentVolumeClaim:
-          claimName: nextcloud-data-hdd2-pvc
+          claimName: nextcloud-pvc
 ---
 apiVersion: v1
 kind: Service
