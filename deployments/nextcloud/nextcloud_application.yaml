@@ -4,6 +4,20 @@
 # https://github.com/docker-library/docs/blob/master/nextcloud/README.md
 
 
+# PersistentVolumeClaim for the Nextcloud application
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
 kind: Deployment
@@ -20,30 +34,6 @@ spec:
       labels:
         app: nextcloud
     spec:
-      initContainers:
-      - name: init-chmod-data
-        image: busybox
-        command:
-        - sh
-        - -c
-        - |
-          # Set correct permissions
-          chown -R www-data:www-data /var/data
-          chmod 0770 /var/data
-          
-          # Wait for the database to be ready (you might need to adjust this)
-          until nc -z nextcloud-postgresql 5432; do echo waiting for postgres; sleep 2; done;
-          
-          # Set backgroundjobs mode to cron
-          php occ config:app:set core backgroundjobs_mode --value cron
-          
-          # Set maintenance window start
-          php occ config:system:set maintenance_window_start --type=integer --value=1
-        volumeMounts:
-        - name: nextcloud-app
-          mountPath: /var/www/html
-      securityContext:
-        fsGroup: 33 # This is typically the www-data group ID
       containers:
       - name: nextcloud
         image: docker.io/library/nextcloud:28.0.9-apache
@@ -52,7 +42,7 @@ spec:
         resources:
           requests:
             cpu: 250m
-            memory: 1Gi
+            memory: 1Ti
           limits:
             cpu: 3500m
             memory: 8Gi
@@ -84,8 +74,6 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: admin-password
-        #- name: NEXTCLOUD_DATA_DIR
-        #  value: /var/data
         - name: NEXTCLOUD_INIT_HTACCESS
           value: "true"
 
@@ -123,6 +111,31 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: redis-password
+        
+        # MinIO Tenant settings
+        - name: OBJECTSTORE_S3_BUCKET
+          value: "nextcloud"
+        - name: OBJECTSTORE_S3_HOST
+          value: "minio-nextcloud-tenant-hl-svc.nextcloud.svc.cluster.local"
+        - name: OBJECTSTORE_S3_PORT
+          value: "9000"
+        - name: OBJECTSTORE_S3_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-storage-user
+              key: CONSOLE_ACCESS_KEY
+        - name: OBJECTSTORE_S3_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: minio-storage-user
+              key: CONSOLE_SECRET_KEY
+        - name: OBJECTSTORE_S3_SSL
+          value: "false"
+        - name: OBJECTSTORE_S3_USEPATH_STYLE
+          value: "true"
+        - name: OBJECTSTORE_S3_AUTOCREATE
+          value: "true"
+
         volumeMounts:
         - name: nextcloud-app
           mountPath: /var/www/html

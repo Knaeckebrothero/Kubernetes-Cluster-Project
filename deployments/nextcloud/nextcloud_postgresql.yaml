@@ -2,6 +2,21 @@
 # https://hub.docker.com/_/postgres
 
 
+# Volumeclaim for the postgres db
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-postgresql-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Use fast storage for the db
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
 # Create a deployment for the postgresql db used by Nextcloud
 apiVersion: apps/v1
 kind: Deployment

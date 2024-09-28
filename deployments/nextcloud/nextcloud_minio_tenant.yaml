@@ -58,10 +58,10 @@ spec:
     resources:
         requests:
           cpu: 250m
-          memory: 3Gi
+          memory: 2Gi
         limits:
           cpu: 2000m
-          memory: 9Gi
+          memory: 8Gi
     securityContext:
       fsGroup: 1000
       fsGroupChangePolicy: OnRootMismatch
@@ -83,7 +83,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 3Ti
+            storage: 1Ti
         storageClassName: longhorn-hdd-minio
       status: {}
     # Number of volumes per server
