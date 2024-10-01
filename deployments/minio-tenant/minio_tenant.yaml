@@ -89,7 +89,7 @@ spec:
     # Number of volumes per server
     volumesPerServer: 2
   priorityClassName: ""
-  requestAutoCert: true
+  requestAutoCert: false
   serviceAccountName: ""
   serviceMetadata:
     consoleServiceAnnotations: {}
