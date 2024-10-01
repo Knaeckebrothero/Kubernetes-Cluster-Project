@@ -1,4 +1,4 @@
-# MinIO Tenant values for Nextcloud deployment
+# MinIO Tenant configuration
 # https://min.io/
 # https://github.com/minio/operator/tree/master/examples/kustomization/
 # kubectl kustomize https://github.com/minio/operator/examples/kustomization/base/ > tenant-base.yaml
@@ -14,8 +14,8 @@ metadata:
     prometheus.io/scrape: "true"
   labels:
     app: minio
-  name: minio-nextcloud-tenant
-  namespace: nextcloud
+  name: minio-tenant
+  namespace: minio-tenant
 spec:
   certConfig: {}
   configuration:
@@ -41,7 +41,7 @@ spec:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchLabels:
-                v1.min.io/tenant: minio-nextcloud-tenant
+                v1.min.io/tenant: minio-tenant
             topologyKey: "kubernetes.io/hostname"
     containerSecurityContext:
       allowPrivilegeEscalation: false
@@ -83,7 +83,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 1Ti
+            storage: 3500Gi
         storageClassName: longhorn-hdd-minio
       status: {}
     # Number of volumes per server

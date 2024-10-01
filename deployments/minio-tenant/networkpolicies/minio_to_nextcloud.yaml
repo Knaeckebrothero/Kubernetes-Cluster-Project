@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-nextcloud-to-minio
+  namespace: minio-tenant
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: nextcloud
+    - podSelector:
+        matchLabels:
+          app: nextcloud
+  policyTypes:
+  - Ingress
