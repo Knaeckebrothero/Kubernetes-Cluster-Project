@@ -8,10 +8,7 @@
 apiVersion: minio.min.io/v2
 kind: Tenant
 metadata:
-  annotations:
-    prometheus.io/path: /minio/v2/metrics/cluster
-    prometheus.io/port: "9000"
-    prometheus.io/scrape: "true"
+  annotations: {}
   labels:
     app: minio
   name: minio-tenant

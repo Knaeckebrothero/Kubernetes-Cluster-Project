@@ -3,8 +3,8 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
-    field.cattle.io/description: A hdd based storage class for minios main storage.
-  creationTimestamp: '2024-09-26T09:05:29Z'
+    field.cattle.io/description: A ssd based storage class for minios cache.
+  creationTimestamp: '2024-09-26T09:03:59Z'
   managedFields:
     - apiVersion: storage.k8s.io/v1
       fieldsType: FieldsV1
@@ -26,13 +26,13 @@ metadata:
         f:volumeBindingMode: {}
       manager: rancher
       operation: Update
-      time: '2024-09-26T09:05:29Z'
-  name: longhorn-hdd-minio
-  resourceVersion: '7059558'
-  uid: 570136fb-9a7a-4f56-abde-39063a7530ad
+      time: '2024-09-26T09:03:59Z'
+  name: longhorn-ssd-minio
+  resourceVersion: '7058988'
+  uid: aaf46e3b-3124-4a1a-8270-04e77f2d7214
 parameters:
   dataLocality: strict-local
-  diskSelector: hdd
+  diskSelector: ssd
   fsType: xfs
   numberOfReplicas: '1'
   staleReplicaTimeout: '2880'

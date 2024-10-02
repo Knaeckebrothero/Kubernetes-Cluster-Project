@@ -65,8 +65,8 @@ spec:
             cpu: 250m
             memory: 1Gi
           limits:
-            cpu: 3500m
-            memory: 8Gi
+            cpu: 2000m
+            memory: 4Gi
         env:
         # Nextcloud settings
         - name: NEXTCLOUD_ADMIN_USER
@@ -121,7 +121,7 @@ spec:
         - name: OBJECTSTORE_S3_BUCKET
           value: "nextcloud"
         - name: OBJECTSTORE_S3_REGION
-          value: "euw"
+          value: "eu-west-rack-0"
         - name: OBJECTSTORE_S3_HOST
           value: "minio-tenant-hl.minio-tenant.svc.cluster.local"
         - name: OBJECTSTORE_S3_PORT
@@ -136,18 +136,14 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: minio-tenant-secret
-        #- name: OBJECTSTORE_S3_STORAGE_CLASS
-        #  value: "EC:2"
         - name: OBJECTSTORE_S3_SSL
           value: "false"
         - name: OBJECTSTORE_S3_USEPATH_STYLE
           value: "true"
         - name: OBJECTSTORE_S3_LEGACYAUTH
-          value: "true"
+          value: "false"
         - name: OBJECTSTORE_S3_AUTOCREATE
           value: "true"
-        - name: OBJECTSTORE_S3_SSL_VERIFY
-          value: "false"
 
         volumeMounts:
         - name: nextcloud-app
