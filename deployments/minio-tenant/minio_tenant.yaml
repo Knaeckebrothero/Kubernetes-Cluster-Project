@@ -83,7 +83,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 3500Gi
+            storage: 3600Gi
         storageClassName: longhorn-hdd-minio
       status: {}
     # Number of volumes per server

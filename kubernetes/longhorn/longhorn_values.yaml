@@ -12,6 +12,7 @@ defaultSettings:
   allowRecurringJobWhileVolumeDetached: null
   allowVolumeCreationWithDegradedAvailability: null
   autoCleanupRecurringJobBackupSnapshot: null
+  autoCleanupSnapshotWhenDeleteBackup: null
   autoCleanupSystemGeneratedSnapshot: null
   autoDeletePodWhenVolumeDetachedUnexpectedly: null
   autoSalvage: null
@@ -32,18 +33,19 @@ defaultSettings:
   defaultReplicaCount: 2
   deletingConfirmationFlag: true
   detachManuallyAttachedVolumesWhenCordoned: null
-  disableRevisionCounter: null
+  disableRevisionCounter: 'true'
   disableSchedulingOnCordonedNode: null
   disableSnapshotPurge: null
   engineReplicaTimeout: null
   failedBackupTTL: null
   fastReplicaRebuildEnabled: true
+  freezeFilesystemForSnapshot: null
   guaranteedInstanceManagerCPU: null
   kubernetesClusterAutoscalerEnabled: null
   logLevel: null
+  longGRPCTimeOut: null
   nodeDownPodDeletionPolicy: null
   nodeDrainPolicy: null
-  offlineReplicaRebuilding: null
   orphanAutoDeletion: true
   priorityClass: longhorn-critical
   recurringFailedJobsHistoryLimit: null
@@ -58,6 +60,7 @@ defaultSettings:
   replicaZoneSoftAntiAffinity: null
   restoreConcurrentLimit: null
   restoreVolumeRecurringJobs: null
+  rwxVolumeFastFailover: null
   snapshotDataIntegrity: enabled
   snapshotDataIntegrityCronjob: 0 2 * * *
   snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: null
@@ -75,6 +78,8 @@ defaultSettings:
   v2DataEngine: null
   v2DataEngineGuaranteedInstanceManagerCPU: null
   v2DataEngineHugepageLimit: null
+  v2DataEngineLogFlags: null
+  v2DataEngineLogLevel: null
 enableGoCoverDir: false
 enablePSP: false
 global:
@@ -92,52 +97,54 @@ global:
           operator: Equal
           value: linux
     systemProjectId: p-5d6pn
+  nodeSelector: {}
+  tolerations: []
 image:
   csi:
     attacher:
       repository: rancher/mirrored-longhornio-csi-attacher
-      tag: v4.5.1
+      tag: v4.6.1
     livenessProbe:
       repository: rancher/mirrored-longhornio-livenessprobe
-      tag: v2.12.0
+      tag: v2.14.0
     nodeDriverRegistrar:
       repository: rancher/mirrored-longhornio-csi-node-driver-registrar
-      tag: v2.9.2
+      tag: v2.12.0
     provisioner:
       repository: rancher/mirrored-longhornio-csi-provisioner
-      tag: v3.6.4
+      tag: v4.0.1
     resizer:
       repository: rancher/mirrored-longhornio-csi-resizer
-      tag: v1.10.1
+      tag: v1.11.1
     snapshotter:
       repository: rancher/mirrored-longhornio-csi-snapshotter
-      tag: v6.3.4
+      tag: v7.0.2
   longhorn:
     backingImageManager:
       repository: rancher/mirrored-longhornio-backing-image-manager
-      tag: v1.6.2
+      tag: v1.7.1
     engine:
       repository: rancher/mirrored-longhornio-longhorn-engine
-      tag: v1.6.2
+      tag: v1.7.1
     instanceManager:
       repository: rancher/mirrored-longhornio-longhorn-instance-manager
-      tag: v1.6.2
+      tag: v1.7.1
     manager:
       repository: rancher/mirrored-longhornio-longhorn-manager
-      tag: v1.6.2
+      tag: v1.7.1
     shareManager:
       repository: rancher/mirrored-longhornio-longhorn-share-manager
-      tag: v1.6.2
+      tag: v1.7.1
     supportBundleKit:
       repository: rancher/mirrored-longhornio-support-bundle-kit
-      tag: v0.0.37
+      tag: v0.0.42
     ui:
       repository: rancher/mirrored-longhornio-longhorn-ui
-      tag: v1.6.2
+      tag: v1.7.1
   openshift:
     oauthProxy:
       repository: rancher/mirrored-longhornio-openshift-origin-oauth-proxy
-      tag: 4.14
+      tag: 4.15
   pullPolicy: IfNotPresent
   defaultImage: true
 ingress:
@@ -146,6 +153,7 @@ ingress:
   host: sslip.io
   ingressClassName: null
   path: /
+  pathType: ImplementationSpecific
   secrets: null
   secureBackends: false
   tls: false
@@ -168,7 +176,13 @@ longhornUI:
   tolerations: []
 metrics:
   serviceMonitor:
+    additionalLabels: {}
+    annotations: {}
     enabled: false
+    interval: ''
+    metricRelabelings: []
+    relabelings: []
+    scrapeTimeout: ''
 namespaceOverride: ''
 networkPolicies:
   enabled: false
@@ -188,12 +202,16 @@ persistence:
     name: null
   defaultClass: true
   defaultClassReplicaCount: 2
-  defaultDataLocality: disabled
-  defaultFsType: ext4
+  defaultDataLocality: best-effort
+  defaultDiskSelector:
+    enable: true
+    selector: ssd
+  defaultFsType: xfs
   defaultMkfsParams: ''
   defaultNodeSelector:
     enable: false
     selector: ''
+  disableRevisionCounter: 'true'
   migratable: false
   nfsOptions: ''
   reclaimPolicy: Delete
@@ -221,4 +239,3 @@ serviceAccount:
   annotations: {}
 longhorn:
   default_setting: false
-  
