@@ -57,15 +57,15 @@ spec:
         fsGroup: 33 # www-data group ID
       containers:
       - name: nextcloud
-        image: docker.io/library/nextcloud:28.0.9-apache
+        image: docker.io/library/nextcloud:production-apache
         ports:
         - containerPort: 80
         resources:
           requests:
-            cpu: 250m
+            cpu: 100m
             memory: 1Gi
           limits:
-            cpu: 2000m
+            cpu: 1000m
             memory: 4Gi
         env:
         # Nextcloud settings

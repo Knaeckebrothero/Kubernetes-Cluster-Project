@@ -1,0 +1,30 @@
+# K3s Kubernetes Deployment for the Nextcloud application
+# https://nextcloud.com/
+# https://hub.docker.com/_/nextcloud
+# https://github.com/docker-library/docs/blob/master/nextcloud/README.md
+
+
+# Cofiguration for a CronJob to run the Nextcloud cron.php script every 30 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nextcloud-cron
+  namespace: nextcloud
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          securityContext:
+            runAsUser: 33
+            runAsGroup: 33
+            fsGroup: 33
+          containers:
+          - name: nextcloud-cron
+            image: docker.io/library/nextcloud:28.0.9-apache
+            command:
+            - /bin/sh
+            - -c
+            - php -f /var/www/html/cron.php
+          restartPolicy: OnFailure
