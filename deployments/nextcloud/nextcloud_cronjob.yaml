@@ -11,7 +11,7 @@ metadata:
   name: nextcloud-cron
   namespace: nextcloud
 spec:
-  schedule: "*/15 * * * *"
+  schedule: "*/5 * * * *"
   jobTemplate:
     spec:
       template:
@@ -40,8 +40,8 @@ spec:
             - php -f /var/www/html/cron.php
             resources:
               requests:
-                cpu: 2000m
-                memory: 4Gi
+                cpu: 500m
+                memory: 2Gi
               limits:
                 cpu: 4000m
                 memory: 8Gi
