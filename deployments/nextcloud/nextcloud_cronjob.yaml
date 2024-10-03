@@ -4,27 +4,52 @@
 # https://github.com/docker-library/docs/blob/master/nextcloud/README.md
 
 
-# Cofiguration for a CronJob to run the Nextcloud cron.php script every 30 minutes
+# Cofiguration for a CronJob to run the Nextcloud cron.php script every 5 minutes
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: nextcloud-cron
   namespace: nextcloud
 spec:
-  schedule: "*/30 * * * *"
+  schedule: "*/15 * * * *"
   jobTemplate:
     spec:
       template:
         spec:
+          # Use this to tell k3s to prefer node1 as it has more resources
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - node1
           securityContext:
             runAsUser: 33
             runAsGroup: 33
             fsGroup: 33
           containers:
           - name: nextcloud-cron
-            image: docker.io/library/nextcloud:28.0.9-apache
+            image: docker.io/library/nextcloud:production-apache
             command:
             - /bin/sh
             - -c
             - php -f /var/www/html/cron.php
+            resources:
+              requests:
+                cpu: 2000m
+                memory: 4Gi
+              limits:
+                cpu: 4000m
+                memory: 8Gi
+            volumeMounts:
+            - name: nextcloud-app
+              mountPath: /var/www/html
+          volumes:
+          - name: nextcloud-app
+            persistentVolumeClaim:
+              claimName: nextcloud-pvc
           restartPolicy: OnFailure
