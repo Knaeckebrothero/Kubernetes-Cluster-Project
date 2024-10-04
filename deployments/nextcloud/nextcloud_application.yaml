@@ -84,7 +84,7 @@ spec:
         - name: PHP_MEMORY_LIMIT
           value: 1024M
         - name: PHP_UPLOAD_LIMIT
-          value: 2048M
+          value: 8192M
 
         # Apache settings
         - name: APACHE_DISABLE_REWRITE_IP

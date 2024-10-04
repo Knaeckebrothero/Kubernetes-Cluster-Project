@@ -7,8 +7,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: gitea-data
-  namespace: gitea
+  name: gitea-pvc
+  namespace: default
 spec:
   accessModes:
     - ReadWriteOnce
@@ -22,7 +22,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gitea
-  namespace: gitea
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -57,14 +57,14 @@ spec:
       volumes:
       - name: gitea-data
         persistentVolumeClaim:
-          claimName: gitea-data
+          claimName: gitea-pvc
 ---
 # NodePort service for the Gitea application
 apiVersion: v1
 kind: Service
 metadata:
   name: gitea
-  namespace: gitea
+  namespace: default
 spec:
   selector:
     app: gitea
