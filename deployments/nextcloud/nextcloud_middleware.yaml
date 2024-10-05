@@ -1,0 +1,16 @@
+# K3s Kubernetes Deployment for the Nextcloud application
+# https://nextcloud.com/
+# https://hub.docker.com/_/nextcloud
+# https://github.com/docker-library/docs/blob/master/nextcloud/README.md
+
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-hsts
+  namespace: nextcloud
+spec:
+  headers:
+    stsSeconds: 15552000
+    stsIncludeSubdomains: true
+    stsPreload: true

@@ -21,6 +21,21 @@ data:
     # Set maintenance window start
     php /var/www/html/occ config:system:set maintenance_window_start --type=integer --value=1
 
+    # Set PHP memory limit
+    php /var/www/html/occ config:system:set memory_limit --value 1G
+
+    # Set PHP max execution time
+    php /var/www/html/occ config:system:set max_execution_time --value 3600
+
+    # Set PHP opcache memory consumption
+    php /var/www/html/occ config:system:set opcache.memory_consumption --value 256
+
+    # Run mimetype migration if it hasn't been done before
+    if [ ! -f /var/www/html/.mimetype_migration_done ]; then
+    php /var/www/html/occ maintenance:repair --include-expensive
+    touch /var/www/html/.mimetype_migration_done
+    fi
+
     echo "Post-installation script completed."
 ---
 # PersistentVolumeClaim for the Nextcloud application
@@ -82,9 +97,14 @@ spec:
         - name: NEXTCLOUD_INIT_HTACCESS
           value: "true"
         - name: PHP_MEMORY_LIMIT
-          value: 1024M
+          value: 2048M
         - name: PHP_UPLOAD_LIMIT
           value: 8192M
+        # PHP settings (not in the container config but might still work)
+        - name: PHP_MAX_EXECUTION_TIME
+          value: "3600"
+        - name: PHP_OPCACHE_MEMORY_CONSUMPTION
+          value: "256"
 
         # Apache settings
         - name: APACHE_DISABLE_REWRITE_IP
@@ -98,6 +118,8 @@ spec:
             secretKeyRef:
               name: nextcloud-secret
               key: trusted-domains
+        - name: APACHE_BODY_LIMIT
+          value: "9663676416"  # 9gb to allow large file uploads (8gb + 1gb for overhead)
 
         # Database connection settings
         - name: POSTGRES_HOST
@@ -154,11 +176,17 @@ spec:
           mountPath: /var/www/html
         - name: post-install-script
           mountPath: /docker-entrypoint-hooks.d/post-installation
+        - name: post-upgrade-script
+          mountPath: /docker-entrypoint-hooks.d/post-upgrade
       volumes:
       - name: nextcloud-app
         persistentVolumeClaim:
           claimName: nextcloud-pvc
       - name: post-install-script
+        configMap:
+          name: nextcloud-post-install-script
+          defaultMode: 0755
+      - name: post-upgrade-script
         configMap:
           name: nextcloud-post-install-script
           defaultMode: 0755
