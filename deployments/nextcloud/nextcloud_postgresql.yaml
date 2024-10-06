@@ -17,6 +17,17 @@ spec:
     requests:
       storage: 16Gi
 ---
+# Config map for the db
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: nextcloud
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    max_connections = 300
+---
 # Create a deployment for the postgresql db used by Nextcloud
 apiVersion: apps/v1
 kind: Deployment
@@ -36,6 +47,7 @@ spec:
       containers:
       - name: postgres
         image: docker.io/library/postgres:16.4-bookworm
+        args: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
         ports:
         - containerPort: 5432
         resources:
@@ -78,10 +90,16 @@ spec:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
           claimName: nextcloud-postgresql-pvc
+      - name: postgres-config
+        configMap:
+          name: postgres-config
 ---
 # Create a service for the postgres db
 apiVersion: v1

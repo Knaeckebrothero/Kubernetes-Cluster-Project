@@ -28,7 +28,7 @@ data:
     php /var/www/html/occ config:system:set max_execution_time --value 3600
 
     # Set PHP opcache memory consumption
-    php /var/www/html/occ config:system:set opcache.memory_consumption --value 256
+    php /var/www/html/occ config:system:set opcache.memory_consumption --value 512
 
     # Run mimetype migration if it hasn't been done before
     if [ ! -f /var/www/html/.mimetype_migration_done ]; then
@@ -100,11 +100,6 @@ spec:
           value: 2048M
         - name: PHP_UPLOAD_LIMIT
           value: 8192M
-        # PHP settings (not in the container config but might still work)
-        - name: PHP_MAX_EXECUTION_TIME
-          value: "3600"
-        - name: PHP_OPCACHE_MEMORY_CONSUMPTION
-          value: "256"
 
         # Apache settings
         - name: APACHE_DISABLE_REWRITE_IP
