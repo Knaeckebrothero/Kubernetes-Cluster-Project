@@ -28,7 +28,7 @@ data:
     php /var/www/html/occ config:system:set max_execution_time --value 3600
 
     # Set PHP opcache memory consumption
-    php /var/www/html/occ config:system:set opcache.memory_consumption --value 1024
+    php /var/www/html/occ config:system:set opcache.memory_consumption --value 512
 
     # Set PHP opcache max accelerated files
     php /var/www/html/occ config:system:set opcache.interned_strings_buffer --value 32
@@ -73,7 +73,7 @@ metadata:
   name: nextcloud
   namespace: nextcloud
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: nextcloud
@@ -84,6 +84,19 @@ spec:
     spec:
       securityContext:
         fsGroup: 33 # www-data group ID
+      # Anti affiniti to dispurse the pods across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nextcloud
+              topologyKey: "kubernetes.io/hostname"
       containers:
       - name: nextcloud
         image: docker.io/library/nextcloud:production-apache
@@ -91,8 +104,8 @@ spec:
         - containerPort: 80
         resources:
           requests:
-            cpu: 250m
-            memory: 1Gi
+            cpu: 500m
+            memory: 2Gi
           limits:
             cpu: 2000m
             memory: 4Gi
