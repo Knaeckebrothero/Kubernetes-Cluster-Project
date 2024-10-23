@@ -22,19 +22,33 @@ data:
     php /var/www/html/occ config:system:set maintenance_window_start --type=integer --value=1
 
     # Set PHP memory limit
-    php /var/www/html/occ config:system:set memory_limit --value 1G
+    php /var/www/html/occ config:system:set memory_limit --value 2G
 
     # Set PHP max execution time
     php /var/www/html/occ config:system:set max_execution_time --value 3600
 
     # Set PHP opcache memory consumption
-    php /var/www/html/occ config:system:set opcache.memory_consumption --value 512
+    php /var/www/html/occ config:system:set opcache.memory_consumption --value 1024
+
+    # Set PHP opcache max accelerated files
+    php /var/www/html/occ config:system:set opcache.interned_strings_buffer --value 32
+
+    # Set PHP opcache max accelerated files
+    php /var/www/html/occ config:system:set opcache.max_accelerated_files --value 10000
+
+    # Set PHP opcache revalidate frequency
+    php /var/www/html/occ config:system:set opcache.revalidate_freq --value 60
 
     # Run mimetype migration if it hasn't been done before
-    if [ ! -f /var/www/html/.mimetype_migration_done ]; then
+    # if [ ! -f /var/www/html/.mimetype_migration_done ]; then
+    # php /var/www/html/occ maintenance:repair --include-expensive
+    # touch /var/www/html/.mimetype_migration_done
+    # fi
+
+    # Run mimetype migration
+    php /var/www/html/occ maintenance:mimetype:update-js
+    php /var/www/html/occ maintenance:mimetype:update-db
     php /var/www/html/occ maintenance:repair --include-expensive
-    touch /var/www/html/.mimetype_migration_done
-    fi
 
     echo "Post-installation script completed."
 ---
@@ -77,11 +91,11 @@ spec:
         - containerPort: 80
         resources:
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 250m
+            memory: 1Gi
           limits:
             cpu: 2000m
-            memory: 2Gi
+            memory: 4Gi
         env:
         # Nextcloud settings
         - name: NEXTCLOUD_ADMIN_USER
@@ -96,8 +110,6 @@ spec:
               key: admin-password
         - name: NEXTCLOUD_INIT_HTACCESS
           value: "true"
-        - name: PHP_MEMORY_LIMIT
-          value: 2048M
         - name: PHP_UPLOAD_LIMIT
           value: 8192M
 
