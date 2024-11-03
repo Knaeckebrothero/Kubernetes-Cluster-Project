@@ -1,0 +1,337 @@
+# Default values for openproject.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+develop: false
+clusterDomain: "cluster.local"
+## Define settings for check-db-ready init-container
+#
+dbInit:
+  image:
+    ## Define docker registry address.
+    #
+    registry: "docker.io"
+
+    ## Define repository string.
+    #
+    repository: "postgres"
+
+    # Postgres version to use
+    tag: 13
+
+    ## Define a imagePullPolicy.
+    ##
+    ## Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+    ##
+    ## "IfNotPresent" => The image is pulled only if it is not already present locally.
+    ## "Always" => Every time the kubelet launches a container, the kubelet queries the container image registry to
+    ##             resolve the name to an image digest. If the kubelet has a container image with that exact digest cached
+    ##             locally, the kubelet uses its cached image; otherwise, the kubelet pulls the image with the resolved
+    ##             digest, and uses that image to launch the container.
+    ## "Never" => The kubelet does not try fetching the image. If the image is somehow already present locally, the
+    ##            kubelet attempts to start the container; otherwise, startup fails
+    #
+    imagePullPolicy: "Always"
+
+  resources:
+    limits:
+      memory: "200Mi"
+    requests:
+      memory: "200Mi"
+
+## Define settings for wait-for-db init-container
+# These containers need access to the Rails stack and wait for the database to be ready
+# (i.e., the seeder and migration job to have completed)
+appInit:
+  resources:
+    limits:
+      memory: "512Mi"
+    requests:
+      memory: "512Mi"
+
+
+ingress:
+  enabled: false
+image:
+  imagePullPolicy: "IfNotPresent"
+  tag: "14.6.3-slim"
+memcached:
+  bundled: true
+workers:
+  default:
+    queues: ""
+    replicas: 1
+    strategy:
+      type: "Recreate"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "4Gi"
+        cpu: "3"
+openproject:
+  ## Enable https in backend response.
+  #
+  https: true
+  host:
+
+  ## Enable HSTS.
+  #
+  hsts: true
+
+  cache:
+    store: "memcache"
+  extraEnvVarsSecret: "openproject-secret"
+
+  ##
+  # Let OpenProject run in a subdirectory,
+  # e.g., https://exameple.com/openproject
+  # specify with leading slash, but without trailing slash
+  # e.g., /openproject
+  railsRelativeUrlRoot:
+
+  ## Define admin user details
+  # only applicable on first installation
+  # Note: Only applicable for versions >= 13.0
+  admin_user:
+    password_reset: "false"
+    name: "projectadmin"
+    mail: "admin@example.net"
+    password: "admin"
+
+  ## Define OpenID Connect providers
+  oidc:
+    enabled: true
+    provider: "Keycloak"
+    displayName: "Keycloak"
+    host: ""
+    identifier: ""
+    secret: ""
+    authorizationEndpoint: ""
+    tokenEndpoint: ""
+    userinfoEndpoint: ""
+    endSessionEndpoint: ""
+    scope: "[openid]"
+
+    # Optional attribute mappings from the id token
+    attribute_map: {}
+
+    ## To avoid having sensitive credentials in your values.yaml, the preferred way is to
+    ## use an existing secret containing the OIDC compatible access credentials.
+    ## Specify the name of this existing secret here.
+    existingSecret: "openproject-secret"
+persistence:
+  enabled: false
+s3:
+  enabled: true
+  auth:
+    # Provide the accessKeyId and secret in plain values
+    # We recommend to use the existingSecret option instead
+    accessKeyId:
+    secretAccessKey:
+
+    ## To avoid having sensitive credentials in your values.yaml, the preferred way is to
+    ## use an existing secret containing the S3 compatible access credentials.
+    ## Specify the name of this existing secret here.
+    existingSecret: "openproject-secret"
+
+    ## In case your secret does not use the default keys in the secret, you can adjust them here.
+    secretKeys:
+      accessKeyId: "accessKeyId"
+      secretAccessKey: "secretAccessKey"
+
+  region:
+  bucketName:
+
+  ## Remove or leave empty to use default AWS S3 endpoint
+  #
+  endpoint:
+  host:
+  port:
+  pathStyle: false
+  signatureVersion: 4
+  useIamProfile: false
+  # Some providers do not properly support signature v4 streaming (e.g. Scaleway)
+  enableSignatureV4Streaming: true
+
+  ## If enabled, upload files directly to S3 from the browser instead of going through OpenProject.
+  ## May not be supported by providers other than AWS S3 itself.
+  ##
+  ## Ref.: https://www.openproject.org/docs/installation-and-operations/configuration/#direct-uploads
+  #
+  directUploads: true
+
+  ## You can always override these options via the environment, for instance:
+  ##
+  ## environment:
+  ##   OPENPROJECT_FOG_CREDENTIALS_REGION: 'us-east-1'
+  ##
+  ## Ref.: https://www.openproject.org/docs/installation-and-operations/configuration/#attachments-storage
+
+## Define custom pod annotations.
+#
+podAnnotations: {}
+postgresql:
+  bundled: false
+
+  ## When "bundled" is set to false, you need to define the database connection details.
+  #
+  connection:
+    host:
+    port:
+
+  ## Database auth details.
+  #
+  auth:
+    ## To avoid having sensitive credentials in your values.yaml, the preferred way to provide a password
+    ## is to use an existing secret containing the PostgreSQL credentials.
+    ## Specify the name of this existing secret here.
+    ##
+    ## If neither an existing secret nor passwords are defined, a secret is generated automatically.
+    ##
+    ## The postgresql chart will create this secret (the name of which ends with `-postgresql` by default)
+    ## with generated user and admin passwords.
+    ## If you want to see the base64 encoded passwords you can output the secret like this:
+    ##
+    ## ```
+    ## kubectl get secret -n <namespace> openproject-postgresql -o yaml | grep password
+    ## ```
+    #
+    existingSecret: "openproject-secret"
+    username: "openproject"
+    database: "openproject"
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 120
+    timeoutSeconds: 3
+    periodSeconds: 30
+
+    ## When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in case of liveness
+    ## probe means restarting the container. In case of readiness probe the Pod will be marked Unready. Defaults to 3.
+    ## Minimum value is 1.
+    #
+    failureThreshold: 3
+
+    ## Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1.
+    ## Must be 1 for liveness and startup Probes. Minimum value is 1.
+    #
+    successThreshold: 1
+  readiness:
+    enabled: true
+    initialDelaySeconds: 30
+    timeoutSeconds: 3
+    periodSeconds: 15
+
+    ## When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in case of liveness
+    ## probe means restarting the container. In case of readiness probe the Pod will be marked Unready. Defaults to 3.
+    ## Minimum value is 1.
+    #
+    failureThreshold: 30
+
+    ## Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1.
+    ## Must be 1 for liveness and startup Probes. Minimum value is 1.
+    #
+    successThreshold: 1
+
+## Number of OpenProject web process replicas.
+#
+replicaCount: 1
+
+## Number of OpenProject background worker process replicas.
+#
+backgroundReplicaCount: 1
+
+## Configure resource requests and limits.
+##
+## http://kubernetes.io/docs/user-guide/compute-resources/
+#
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "4Gi"
+    cpu: "2"
+service:
+  enabled: true
+
+  ## Choose the kind of Service:
+  ##
+  ## "ClusterIP" => Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable
+  ##                from within the cluster. This is the default that is used if you don't explicitly specify a type for
+  ##                a Service.
+  ## "NodePort" => Exposes the Service on each Node's IP at a static port (the NodePort). To make the node port
+  ##               available, Kubernetes sets up a cluster IP address, the same as if you had requested a Service of
+  ##               type: ClusterIP.
+  ## "LoadBalancer" => Exposes the Service externally using a cloud provider's load balancer.
+  ##
+  ## Ref.: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  #
+  type: "ClusterIP"
+
+  ## Specify the external IP address for the LoadBalancer service. If your cloud provider supports
+  ## specifying a static IP for the load balancer, you can set it here.
+  ## Example:
+  ## loadBalancerIP: "172.16.0.1"
+  loadBalancerIP: ""
+
+  ## Define the ports of Service.
+  ## You can set the port value to an arbitrary value, it will map the container port by name.
+  ##
+  ## Custom NodePort example:
+  ## ports:
+  ##   http:
+  ##     port: 8080
+  ##     protocol: "TCP"
+  ##     nodePort: "38080"
+  #
+  ports:
+    http:
+      containerPort: 8080
+      port: 8080
+      protocol: "TCP"
+
+  ## Configure session affinity for to hit the same backend for the period specified in `timeoutSeconds`.
+  ##
+  ## Ref.: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
+  #
+  sessionAffinity:
+    ## Whether to enable session affinity or not.
+    #
+    enabled: false
+    ## The session duration in seconds.
+    #
+    timeoutSeconds: 10800
+
+## Define Service Accounts for Pods.
+##
+## Ref.: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+#
+serviceAccount:
+  ## Whether to create service account.
+  #
+  create: true
+
+  ## Define custom service account annotations.
+  #
+  annotations: {}
+
+# Options for the seeder job
+seederJob:
+  ## Define custom seeder job annotations.
+  #
+  annotations: {}
+  resources:
+    limits:
+      memory: "512Mi"
+    requests:
+      memory: "512Mi"
+
+## Tolerations for pod assignment.
+##
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+#
+tolerations: []
