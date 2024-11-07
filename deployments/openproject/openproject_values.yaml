@@ -1,337 +1,324 @@
-# Default values for openproject.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Default values for openproject helm chart
+# The chart is mainly configured through global environment variables
+# https://www.openproject.org/docs/installation-and-operations/configuration/environment/
 
 
-develop: false
-clusterDomain: "cluster.local"
-## Define settings for check-db-ready init-container
-#
-dbInit:
-  image:
-    ## Define docker registry address.
-    #
-    registry: "docker.io"
-
-    ## Define repository string.
-    #
-    repository: "postgres"
-
-    # Postgres version to use
-    tag: 13
-
-    ## Define a imagePullPolicy.
-    ##
-    ## Ref.: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
-    ##
-    ## "IfNotPresent" => The image is pulled only if it is not already present locally.
-    ## "Always" => Every time the kubelet launches a container, the kubelet queries the container image registry to
-    ##             resolve the name to an image digest. If the kubelet has a container image with that exact digest cached
-    ##             locally, the kubelet uses its cached image; otherwise, the kubelet pulls the image with the resolved
-    ##             digest, and uses that image to launch the container.
-    ## "Never" => The kubelet does not try fetching the image. If the image is somehow already present locally, the
-    ##            kubelet attempts to start the container; otherwise, startup fails
-    #
-    imagePullPolicy: "Always"
-
-  resources:
-    limits:
-      memory: "200Mi"
-    requests:
-      memory: "200Mi"
-
-## Define settings for wait-for-db init-container
-# These containers need access to the Rails stack and wait for the database to be ready
-# (i.e., the seeder and migration job to have completed)
+affinity: {}
 appInit:
   resources:
     limits:
-      memory: "512Mi"
+      memory: 512Mi
     requests:
-      memory: "512Mi"
-
-
-ingress:
-  enabled: false
+      memory: 512Mi
+backgroundReplicaCount: 1
+cleanup:
+  deletePodsOnSuccess: true
+  deletePodsOnSuccessTimeout: 6000
+clusterDomain: cluster.local
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  enabled: true
+  readOnlyRootFilesystem: true
+  runAsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+dbInit:
+  image:
+    imagePullPolicy: Always
+    registry: docker.io
+    repository: postgres
+    tag: 13
+  resources:
+    limits:
+      memory: 200Mi
+    requests:
+      memory: 200Mi
+develop: false
+egress:
+  tls:
+    rootCA:
+      configMap: ''
+      fileName: ''
+environment:
+  OPENPROJECT_APP__TITLE: "UniversityProject"
+  OPENPROJECT_AVAILABLE__LANGUAGES: ["en", "de", "fr", "es", "pt", "it", "zh-CN", "ko", "ru"]
+  OPENPROJECT_BOARDS__DEMO__DATA__AVAILABLE: true
+  OPENPROJECT_DEFAULT__LANGUAGE: "en"
+  # OPENPROJECT_DEFAULT__PROJECTS__MODULES (default=["calendar", "board_view", "work_package_tracking", "news", "costs", "wiki"]) Default enabled modules for new projects
+  OPENPROJECT_DEFAULT__PROJECTS__PUBLIC: false
+  OPENPROJECT_DEMO__PROJECTS__AVAILABLE: true
+  OPENPROJECT_DEMO__VIEW__OF__TYPE__TEAM__PLANNER__SEEDED: true
+  OPENPROJECT_DEMO__VIEW__OF__TYPE__WORK__PACKAGES__TABLE__SEEDED: true
+  # OPENPROJECT_DIRECT__UPLOADS (default=true) Enable direct uploads to AWS S3. Only applicable with enabled Fog / AWS S3 configuration
+  # OPENPROJECT_DISABLE__PASSWORD__CHOICE (default=false) If enabled a user's password cannot be set to an arbitrary value, but can only be randomized.
+  # OPENPROJECT_DISABLE__PASSWORD__LOGIN (default=false) Disable internal logins and instead only allow SSO through OmniAuth.
+  # OPENPROJECT_EDITION (default="standard") OpenProject edition mode
+  # OPENPROJECT_EE__MANAGER__VISIBLE (default=true) Show or hide the Enterprise configuration page and enterprise banners
+  # OPENPROJECT_EMAIL__DELIVERY__CONFIGURATION (default="inapp")
+  OPENPROJECT_EMAIL__DELIVERY__METHOD: "smtp"
+  # OPENPROJECT_EMAIL__LOGIN (default=false) Use email as login
+  # OPENPROJECT_ENABLED__PROJECTS__COLUMNS (default=["project_status", "public", "created_at", "latest_activity_at", "required_disk_space"]) Visible in project list
+  # OPENPROJECT_ENTERPRISE__PLAN (default="enterprise-on-premises---euro---1-year") Default EE selected plan
+  # OPENPROJECT_ENTERPRISE__TRIAL__CREATION__HOST (default="https://augur.openproject.com") Host for EE trial service
+  # OPENPROJECT_FOG (default={}) Configure fog, e.g. when using an S3 uploader
+  # OPENPROJECT_HOST__NAME (default="localhost:3000") Host name
+  
+  ### IMPORTANT ###
+  # These are also set below in the chart, make sure to set them in one place only to avoid conflicts
+  # OPENPROJECT_HSTS: true # (default=true) Allow disabling of HSTS headers and http -> https redirects
+  # OPENPROJECT_HTTPS: true # (default=false) Set assumed connection security for the Rails processes
+  
+  # OPENPROJECT_INTERNAL__PASSWORD__CONFIRMATION (default=true) Require password confirmations for certain administrative actions
+  # OPENPROJECT_LDAP__FORCE__NO__PAGE (default=nil) Force LDAP to respond as a single page, in case paged responses do not work with your server.
+  # OPENPROJECT_LDAP__GROUPS__DISABLE__SYNC__JOB (default=false) Deactivate regular synchronization job for groups in case scheduled as a separate cronjob
+  # OPENPROJECT_LDAP__TLS__OPTIONS (default={})
+  # OPENPROJECT_LDAP__USERS__DISABLE__SYNC__JOB (default=false) Deactive user attributes synchronization from LDAP
+  # OPENPROJECT_LDAP__USERS__SYNC__STATUS (default=false) Enable user status (locked/unlocked) synchronization from LDAP
+  OPENPROJECT_LOG__LEVEL: "debug"
+  # OPENPROJECT_LOGIN__REQUIRED (default=false) Authentication required
+  # OPENPROJECT_MAIL__FROM (default="openproject@example.net") Emission email address
+  # OPENPROJECT_MAIL__HANDLER__API__KEY (default=nil) API key
+  # OPENPROJECT_MAIL__HANDLER__BODY__DELIMITER__REGEX (default="") Truncate emails matching this regex
+  # OPENPROJECT_MAIL__HANDLER__BODY__DELIMITERS (default="") Truncate emails after one of these lines
+  # OPENPROJECT_MAIL__HANDLER__IGNORE__FILENAMES (default="signature.asc") Ignored mail attachments
+  # OPENPROJECT_MAIL__SUFFIX__SEPARATORS (default="+")
+  # OPENPROJECT_MAIN__CONTENT__LANGUAGE (default="english") Main content language for PostgreSQL full text features
+  # OPENPROJECT_OAUTH__ALLOW__REMAPPING__OF__EXISTING__USERS (default=true) When set to false, prevent users from other identity providers to take over accounts connected to another identity provider.
+  # OPENPROJECT_OMNIAUTH__DIRECT__LOGIN__PROVIDER (default=nil) Clicking on login sends a login request to the specified OmniAuth provider.
+  # OPENPROJECT_ONBOARDING__ENABLED (default=true) Enable or disable onboarding guided tour for new users
+  # OPENPROJECT_ONBOARDING__VIDEO__URL (default="https://player.vimeo.com/video/163426858?autoplay=1") Onboarding guide instructional video URL
+  # OPENPROJECT_OPENID__CONNECT (default={})
+  # OPENPROJECT_PASSWORD__ACTIVE__RULES (default=["lowercase", "uppercase", "numeric", "special"]) Active character classes
+  # OPENPROJECT_PASSWORD__MIN__ADHERED__RULES (default=0) Minimum number of required classes
+  # OPENPROJECT_PASSWORD__MIN__LENGTH (default=10) Minimum length
+  # OPENPROJECT_PLUGIN__OPENPROJECT__BOARDS (default=nil)
+  # OPENPROJECT_PLUGIN__OPENPROJECT__CALENDAR (default=nil)
+  # OPENPROJECT_PLUGIN__OPENPROJECT__LDAP__GROUPS (default={})
+  # OPENPROJECT_PLUGIN__OPENPROJECT__OPENID__CONNECT (default=nil)
+  # OPENPROJECT_PLUGIN__OPENPROJECT__TEAM__PLANNER (default=nil)
+  # OPENPROJECT_REST__API__ENABLED (default=true) Enable REST web service
+  OPENPROJECT_SEED__ADMIN__USER__MAIL: "admin@example.net"
+  OPENPROJECT_SEED__ADMIN__USER__NAME: "OpenProject Admin"
+  OPENPROJECT_SEED__ADMIN__USER__PASSWORD: "admin"
+  OPENPROJECT_SEED__ADMIN__USER__PASSWORD__RESET: false
+  # OPENPROJECT_SELF__REGISTRATION (default=2) Self-registration
+  # OPENPROJECT_SENDMAIL__ARGUMENTS (default="-i") Arguments to call sendmail with in case it is configured as outgoing email setup
+  # OPENPROJECT_SENDMAIL__LOCATION (default="/usr/sbin/sendmail") Location of sendmail to call if it is configured as outgoing email setup
+  # OPENPROJECT_SHOW__COMMUNITY__LINKS (default=true) Enable or disable links to OpenProject community instances
+  OPENPROJECT_SMTP__ADDRESS: "smtp.gmail.com"
+  OPENPROJECT_SMTP__AUTHENTICATION: "plain"
+  OPENPROJECT_SMTP__DOMAIN: "gmail.com"
+  OPENPROJECT_SMTP__ENABLE__STARTTLS__AUTO: true
+  # OPENPROJECT_SMTP__OPENSSL__VERIFY__MODE (default="peer") Globally set verify mode for OpenSSL. Careful: Setting to none will disable any SSL verification!
+  OPENPROJECT_SMTP__PASSWORD: "YOUR_PASSWORD"
+  OPENPROJECT_SMTP__PORT: "587"
+  # OPENPROJECT_SMTP__SSL (default=false) Use SSL connection
+  OPENPROJECT_SMTP__USER__NAME: "YOUR_MAIL"
+  # OPENPROJECT_SQL__SLOW__QUERY__THRESHOLD (default=2000) Time limit in ms after which queries will be logged as slow queries
+  # OPENPROJECT_START__OF__WEEK (default=nil) Week starts on
+  # OPENPROJECT_TIME__FORMAT (default=nil) Time
+  # OPENPROJECT_USER__DEFAULT__TIMEZONE (default=nil) Users default time zone
+  # OPENPROJECT_USER__FORMAT (default=:firstname_lastname) Users name format
+  # OPENPROJECT_USERS__DELETABLE__BY__ADMINS (default=false) User accounts deletable by admins
+  # OPENPROJECT_USERS__DELETABLE__BY__SELF (default=false) Users allowed to delete their accounts
+  # OPENPROJECT_WEB (default={"workers"=>2, "timeout"=>120, "wait_timeout"=>10, "min_threads"=>4, "max_threads"=>16}) Web worker count and threads configuration
+  # OPENPROJECT_WELCOME__ON__HOMESCREEN (default=false) Display welcome block on homescreen
+  # OPENPROJECT_WELCOME__TEXT (default=nil) Welcome block text
+  # OPENPROJECT_WELCOME__TITLE (default=nil) Welcome block title
+  # OPENPROJECT_WORKING__DAYS (default=[1, 2, 3, 4, 5]) Set working days of the week (Array of 1 to 7, where 1=Monday, 7=Sunday)
+extraVolumeMounts: []
+extraVolumes: []
+fullnameOverride: ''
+global:
+  imagePullSecrets: []
 image:
-  imagePullPolicy: "IfNotPresent"
-  tag: "14.6.3-slim"
+  imagePullPolicy: Always
+  registry: docker.io
+  repository: openproject/openproject
+  tag: 14.6.3-slim
+imagePullSecrets: []
+ingress:
+  annotations: {}
+  enabled: false
+  host: <YOUR_HOST>
+  ingressClassName: null
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: ''
 memcached:
   bundled: true
-workers:
-  default:
-    queues: ""
-    replicas: 1
-    strategy:
-      type: "Recreate"
-    resources:
-      requests:
-        memory: "512Mi"
-        cpu: "250m"
-      limits:
-        memory: "4Gi"
-        cpu: "3"
-openproject:
-  ## Enable https in backend response.
-  #
-  https: true
-  host:
-
-  ## Enable HSTS.
-  #
-  hsts: true
-
-  cache:
-    store: "memcache"
-  extraEnvVarsSecret: "openproject-secret"
-
-  ##
-  # Let OpenProject run in a subdirectory,
-  # e.g., https://exameple.com/openproject
-  # specify with leading slash, but without trailing slash
-  # e.g., /openproject
-  railsRelativeUrlRoot:
-
-  ## Define admin user details
-  # only applicable on first installation
-  # Note: Only applicable for versions >= 13.0
-  admin_user:
-    password_reset: "false"
-    name: "projectadmin"
-    mail: "admin@example.net"
-    password: "admin"
-
-  ## Define OpenID Connect providers
-  oidc:
-    enabled: true
-    provider: "Keycloak"
-    displayName: "Keycloak"
-    host: ""
-    identifier: ""
-    secret: ""
-    authorizationEndpoint: ""
-    tokenEndpoint: ""
-    userinfoEndpoint: ""
-    endSessionEndpoint: ""
-    scope: "[openid]"
-
-    # Optional attribute mappings from the id token
-    attribute_map: {}
-
-    ## To avoid having sensitive credentials in your values.yaml, the preferred way is to
-    ## use an existing secret containing the OIDC compatible access credentials.
-    ## Specify the name of this existing secret here.
-    existingSecret: "openproject-secret"
-persistence:
-  enabled: false
-s3:
-  enabled: true
-  auth:
-    # Provide the accessKeyId and secret in plain values
-    # We recommend to use the existingSecret option instead
-    accessKeyId:
-    secretAccessKey:
-
-    ## To avoid having sensitive credentials in your values.yaml, the preferred way is to
-    ## use an existing secret containing the S3 compatible access credentials.
-    ## Specify the name of this existing secret here.
-    existingSecret: "openproject-secret"
-
-    ## In case your secret does not use the default keys in the secret, you can adjust them here.
-    secretKeys:
-      accessKeyId: "accessKeyId"
-      secretAccessKey: "secretAccessKey"
-
-  region:
-  bucketName:
-
-  ## Remove or leave empty to use default AWS S3 endpoint
-  #
-  endpoint:
-  host:
-  port:
-  pathStyle: false
-  signatureVersion: 4
-  useIamProfile: false
-  # Some providers do not properly support signature v4 streaming (e.g. Scaleway)
-  enableSignatureV4Streaming: true
-
-  ## If enabled, upload files directly to S3 from the browser instead of going through OpenProject.
-  ## May not be supported by providers other than AWS S3 itself.
-  ##
-  ## Ref.: https://www.openproject.org/docs/installation-and-operations/configuration/#direct-uploads
-  #
-  directUploads: true
-
-  ## You can always override these options via the environment, for instance:
-  ##
-  ## environment:
-  ##   OPENPROJECT_FOG_CREDENTIALS_REGION: 'us-east-1'
-  ##
-  ## Ref.: https://www.openproject.org/docs/installation-and-operations/configuration/#attachments-storage
-
-## Define custom pod annotations.
-#
-podAnnotations: {}
-postgresql:
-  bundled: false
-
-  ## When "bundled" is set to false, you need to define the database connection details.
-  #
   connection:
-    host:
-    port:
-
-  ## Database auth details.
-  #
+    host: null
+    port: null
+  global:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      enabled: true
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+nameOverride: ''
+nodeSelector: {}
+openproject:
+  admin_user:
+    mail: ''
+    name: ''
+    password: ''
+    password_reset: 'false'
+  cache:
+    store: memcache
+  extraEnvVarsSecret: ''
+  host: '<YOUR_HOST>'
+  hsts: true
+  https: true
+  oidc:
+    attribute_map: {}
+    authorizationEndpoint: ''
+    displayName: Keycloak
+    enabled: false
+    endSessionEndpoint: ''
+    existingSecret: null
+    extraOidcSealedSecret: null
+    host: ''
+    identifier: ''
+    provider: Keycloak
+    scope: '[openid]'
+    secret: ''
+    secretKeys:
+      identifier: clientId
+      secret: clientSecret
+    tokenEndpoint: ''
+    userinfoEndpoint: ''
+  postgresStatementTimeout: 120s
+  railsRelativeUrlRoot: null
+  seed_locale: en
+  tmpVolumesAnnotations: {}
+  tmpVolumesLabels: {}
+  tmpVolumesStorage: 5Gi
+  tmpVolumesStorageClassName: null
+  useTmpVolumes: null
+persistence:
+  accessModes:
+    - ReadWriteMany
+  annotations: {}
+  # Keep this disabled since we are using a s3 objectstore
+  enabled: false
+  size: 1Gi
+  storageClassName: null
+podAnnotations: {}
+podSecurityContext:
+  enabled: true
+  fsGroup: 1000
+postgresql:
   auth:
-    ## To avoid having sensitive credentials in your values.yaml, the preferred way to provide a password
-    ## is to use an existing secret containing the PostgreSQL credentials.
-    ## Specify the name of this existing secret here.
-    ##
-    ## If neither an existing secret nor passwords are defined, a secret is generated automatically.
-    ##
-    ## The postgresql chart will create this secret (the name of which ends with `-postgresql` by default)
-    ## with generated user and admin passwords.
-    ## If you want to see the base64 encoded passwords you can output the secret like this:
-    ##
-    ## ```
-    ## kubectl get secret -n <namespace> openproject-postgresql -o yaml | grep password
-    ## ```
-    #
-    existingSecret: "openproject-secret"
-    username: "openproject"
-    database: "openproject"
+    database: openproject
+    existingSecret: 'openproject-postgres-secret'
+    password: ''
+    postgresPassword: ''
+    username: openproject
+  bundled: false
+  connection:
+    host: openproject-postgresql
+    port: 5432
+  global:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      enabled: true
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
 probes:
   liveness:
     enabled: true
-    initialDelaySeconds: 120
-    timeoutSeconds: 3
-    periodSeconds: 30
-
-    ## When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in case of liveness
-    ## probe means restarting the container. In case of readiness probe the Pod will be marked Unready. Defaults to 3.
-    ## Minimum value is 1.
-    #
     failureThreshold: 3
-
-    ## Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1.
-    ## Must be 1 for liveness and startup Probes. Minimum value is 1.
-    #
+    initialDelaySeconds: 120
+    periodSeconds: 30
     successThreshold: 1
+    timeoutSeconds: 3
   readiness:
     enabled: true
-    initialDelaySeconds: 30
-    timeoutSeconds: 3
-    periodSeconds: 15
-
-    ## When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in case of liveness
-    ## probe means restarting the container. In case of readiness probe the Pod will be marked Unready. Defaults to 3.
-    ## Minimum value is 1.
-    #
     failureThreshold: 30
-
-    ## Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1.
-    ## Must be 1 for liveness and startup Probes. Minimum value is 1.
-    #
+    initialDelaySeconds: 30
+    periodSeconds: 15
     successThreshold: 1
-
-## Number of OpenProject web process replicas.
-#
+    timeoutSeconds: 3
 replicaCount: 1
-
-## Number of OpenProject background worker process replicas.
-#
-backgroundReplicaCount: 1
-
-## Configure resource requests and limits.
-##
-## http://kubernetes.io/docs/user-guide/compute-resources/
-#
 resources:
   requests:
     memory: "512Mi"
     cpu: "250m"
   limits:
     memory: "4Gi"
-    cpu: "2"
+    cpu: "2000"
+s3:
+  auth:
+    accessKeyId: null
+    existingSecret: 'openproject-s3-secret'
+    secretAccessKey: null
+    secretKeys:
+      accessKeyId: accessKeyId
+      secretAccessKey: secretAccessKey
+  bucketName: openproject
+  directUploads: true
+  enableSignatureV4Streaming: true
+  enabled: true
+  endpoint: "http://minio-tenant-hl.minio-tenant.svc.cluster.local:9000"
+  host: "minio-tenant-hl.minio-tenant.svc.cluster.local"
+  pathStyle: true
+  port: "9000"
+  region: "eu-west-rack-0"
+  signatureVersion: 4
+  useIamProfile: false
+seederJob:
+  annotations: {}
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      memory: 512Mi
 service:
   enabled: true
-
-  ## Choose the kind of Service:
-  ##
-  ## "ClusterIP" => Exposes the Service on a cluster-internal IP. Choosing this value makes the Service only reachable
-  ##                from within the cluster. This is the default that is used if you don't explicitly specify a type for
-  ##                a Service.
-  ## "NodePort" => Exposes the Service on each Node's IP at a static port (the NodePort). To make the node port
-  ##               available, Kubernetes sets up a cluster IP address, the same as if you had requested a Service of
-  ##               type: ClusterIP.
-  ## "LoadBalancer" => Exposes the Service externally using a cloud provider's load balancer.
-  ##
-  ## Ref.: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  #
-  type: "ClusterIP"
-
-  ## Specify the external IP address for the LoadBalancer service. If your cloud provider supports
-  ## specifying a static IP for the load balancer, you can set it here.
-  ## Example:
-  ## loadBalancerIP: "172.16.0.1"
-  loadBalancerIP: ""
-
-  ## Define the ports of Service.
-  ## You can set the port value to an arbitrary value, it will map the container port by name.
-  ##
-  ## Custom NodePort example:
-  ## ports:
-  ##   http:
-  ##     port: 8080
-  ##     protocol: "TCP"
-  ##     nodePort: "38080"
-  #
+  loadBalancerIP: ''
   ports:
     http:
       containerPort: 8080
       port: 8080
-      protocol: "TCP"
-
-  ## Configure session affinity for to hit the same backend for the period specified in `timeoutSeconds`.
-  ##
-  ## Ref.: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
-  #
+      protocol: TCP
   sessionAffinity:
-    ## Whether to enable session affinity or not.
-    #
     enabled: false
-    ## The session duration in seconds.
-    #
     timeoutSeconds: 10800
-
-## Define Service Accounts for Pods.
-##
-## Ref.: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-#
+  type: ClusterIP
 serviceAccount:
-  ## Whether to create service account.
-  #
+  annotations: {}
   create: true
-
-  ## Define custom service account annotations.
-  #
-  annotations: {}
-
-# Options for the seeder job
-seederJob:
-  ## Define custom seeder job annotations.
-  #
-  annotations: {}
-  resources:
-    limits:
-      memory: "512Mi"
-    requests:
-      memory: "512Mi"
-
-## Tolerations for pod assignment.
-##
-## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-#
+strategy:
+  type: Recreate
 tolerations: []
+workers:
+  default:
+    queues: ''
+    replicas: 1
+    resources:
+      limits:
+        cpu: '2'
+        memory: 4Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    strategy:
+      type: Recreate
