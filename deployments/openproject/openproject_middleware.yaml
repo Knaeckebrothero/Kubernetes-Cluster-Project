@@ -1,0 +1,9 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: openproject-rewrite-host
+  namespace: openproject
+spec:
+  headers:
+    customRequestHeaders:
+      Host: <your_domain>
