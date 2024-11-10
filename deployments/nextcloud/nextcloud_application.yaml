@@ -11,6 +11,7 @@ metadata:
   name: nextcloud-post-install-script
   namespace: nextcloud
 data:
+  # Manually execute: su -s /bin/sh www-data -c "./post-install.sh"
   post-install.sh: |
     #!/bin/sh
     set -eu
@@ -20,6 +21,9 @@ data:
 
     # Set maintenance window start
     php /var/www/html/occ config:system:set maintenance_window_start --type=integer --value=1
+
+    # Allow local servers
+    php /var/www/html/occ config:system:set allow_local_remote_servers --value 1
 
     # Set PHP memory limit
     php /var/www/html/occ config:system:set memory_limit --value 2G

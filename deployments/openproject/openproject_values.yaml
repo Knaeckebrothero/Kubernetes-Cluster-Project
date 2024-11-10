@@ -1,5 +1,6 @@
 # Default values for openproject helm chart
 # The chart is mainly configured through global environment variables
+# https://github.com/opf/helm-charts/blob/main/charts/openproject/values.yaml
 # https://www.openproject.org/docs/installation-and-operations/configuration/environment/
 
 
@@ -45,92 +46,14 @@ egress:
       configMap: ''
       fileName: ''
 environment:
-  OPENPROJECT_APP__TITLE: "UniversityProject"
-  OPENPROJECT_AVAILABLE__LANGUAGES: ["en", "de", "fr", "es", "pt", "it", "zh-CN", "ko", "ru"]
-  OPENPROJECT_BOARDS__DEMO__DATA__AVAILABLE: true
-  OPENPROJECT_DEFAULT__LANGUAGE: "en"
-  # OPENPROJECT_DEFAULT__PROJECTS__MODULES (default=["calendar", "board_view", "work_package_tracking", "news", "costs", "wiki"]) Default enabled modules for new projects
-  OPENPROJECT_DEFAULT__PROJECTS__PUBLIC: false
-  OPENPROJECT_DEMO__PROJECTS__AVAILABLE: true
-  OPENPROJECT_DEMO__VIEW__OF__TYPE__TEAM__PLANNER__SEEDED: true
-  OPENPROJECT_DEMO__VIEW__OF__TYPE__WORK__PACKAGES__TABLE__SEEDED: true
-  # OPENPROJECT_DIRECT__UPLOADS (default=true) Enable direct uploads to AWS S3. Only applicable with enabled Fog / AWS S3 configuration
-  # OPENPROJECT_DISABLE__PASSWORD__CHOICE (default=false) If enabled a user's password cannot be set to an arbitrary value, but can only be randomized.
-  # OPENPROJECT_DISABLE__PASSWORD__LOGIN (default=false) Disable internal logins and instead only allow SSO through OmniAuth.
-  # OPENPROJECT_EDITION (default="standard") OpenProject edition mode
-  # OPENPROJECT_EE__MANAGER__VISIBLE (default=true) Show or hide the Enterprise configuration page and enterprise banners
-  # OPENPROJECT_EMAIL__DELIVERY__CONFIGURATION (default="inapp")
   OPENPROJECT_EMAIL__DELIVERY__METHOD: "smtp"
-  # OPENPROJECT_EMAIL__LOGIN (default=false) Use email as login
-  # OPENPROJECT_ENABLED__PROJECTS__COLUMNS (default=["project_status", "public", "created_at", "latest_activity_at", "required_disk_space"]) Visible in project list
-  # OPENPROJECT_ENTERPRISE__PLAN (default="enterprise-on-premises---euro---1-year") Default EE selected plan
-  # OPENPROJECT_ENTERPRISE__TRIAL__CREATION__HOST (default="https://augur.openproject.com") Host for EE trial service
-  # OPENPROJECT_FOG (default={}) Configure fog, e.g. when using an S3 uploader
-  # OPENPROJECT_HOST__NAME (default="localhost:3000") Host name
-  
-  ### IMPORTANT ###
-  # These are also set below in the chart, make sure to set them in one place only to avoid conflicts
-  # OPENPROJECT_HSTS: true # (default=true) Allow disabling of HSTS headers and http -> https redirects
-  # OPENPROJECT_HTTPS: true # (default=false) Set assumed connection security for the Rails processes
-  
-  # OPENPROJECT_INTERNAL__PASSWORD__CONFIRMATION (default=true) Require password confirmations for certain administrative actions
-  # OPENPROJECT_LDAP__FORCE__NO__PAGE (default=nil) Force LDAP to respond as a single page, in case paged responses do not work with your server.
-  # OPENPROJECT_LDAP__GROUPS__DISABLE__SYNC__JOB (default=false) Deactivate regular synchronization job for groups in case scheduled as a separate cronjob
-  # OPENPROJECT_LDAP__TLS__OPTIONS (default={})
-  # OPENPROJECT_LDAP__USERS__DISABLE__SYNC__JOB (default=false) Deactive user attributes synchronization from LDAP
-  # OPENPROJECT_LDAP__USERS__SYNC__STATUS (default=false) Enable user status (locked/unlocked) synchronization from LDAP
-  OPENPROJECT_LOG__LEVEL: "debug"
-  # OPENPROJECT_LOGIN__REQUIRED (default=false) Authentication required
-  # OPENPROJECT_MAIL__FROM (default="openproject@example.net") Emission email address
-  # OPENPROJECT_MAIL__HANDLER__API__KEY (default=nil) API key
-  # OPENPROJECT_MAIL__HANDLER__BODY__DELIMITER__REGEX (default="") Truncate emails matching this regex
-  # OPENPROJECT_MAIL__HANDLER__BODY__DELIMITERS (default="") Truncate emails after one of these lines
-  # OPENPROJECT_MAIL__HANDLER__IGNORE__FILENAMES (default="signature.asc") Ignored mail attachments
-  # OPENPROJECT_MAIL__SUFFIX__SEPARATORS (default="+")
-  # OPENPROJECT_MAIN__CONTENT__LANGUAGE (default="english") Main content language for PostgreSQL full text features
-  # OPENPROJECT_OAUTH__ALLOW__REMAPPING__OF__EXISTING__USERS (default=true) When set to false, prevent users from other identity providers to take over accounts connected to another identity provider.
-  # OPENPROJECT_OMNIAUTH__DIRECT__LOGIN__PROVIDER (default=nil) Clicking on login sends a login request to the specified OmniAuth provider.
-  # OPENPROJECT_ONBOARDING__ENABLED (default=true) Enable or disable onboarding guided tour for new users
-  # OPENPROJECT_ONBOARDING__VIDEO__URL (default="https://player.vimeo.com/video/163426858?autoplay=1") Onboarding guide instructional video URL
-  # OPENPROJECT_OPENID__CONNECT (default={})
-  # OPENPROJECT_PASSWORD__ACTIVE__RULES (default=["lowercase", "uppercase", "numeric", "special"]) Active character classes
-  # OPENPROJECT_PASSWORD__MIN__ADHERED__RULES (default=0) Minimum number of required classes
-  # OPENPROJECT_PASSWORD__MIN__LENGTH (default=10) Minimum length
-  # OPENPROJECT_PLUGIN__OPENPROJECT__BOARDS (default=nil)
-  # OPENPROJECT_PLUGIN__OPENPROJECT__CALENDAR (default=nil)
-  # OPENPROJECT_PLUGIN__OPENPROJECT__LDAP__GROUPS (default={})
-  # OPENPROJECT_PLUGIN__OPENPROJECT__OPENID__CONNECT (default=nil)
-  # OPENPROJECT_PLUGIN__OPENPROJECT__TEAM__PLANNER (default=nil)
-  # OPENPROJECT_REST__API__ENABLED (default=true) Enable REST web service
-  OPENPROJECT_SEED__ADMIN__USER__MAIL: "admin@example.net"
-  OPENPROJECT_SEED__ADMIN__USER__NAME: "OpenProject Admin"
-  OPENPROJECT_SEED__ADMIN__USER__PASSWORD: "admin"
-  OPENPROJECT_SEED__ADMIN__USER__PASSWORD__RESET: false
-  # OPENPROJECT_SELF__REGISTRATION (default=2) Self-registration
-  # OPENPROJECT_SENDMAIL__ARGUMENTS (default="-i") Arguments to call sendmail with in case it is configured as outgoing email setup
-  # OPENPROJECT_SENDMAIL__LOCATION (default="/usr/sbin/sendmail") Location of sendmail to call if it is configured as outgoing email setup
-  # OPENPROJECT_SHOW__COMMUNITY__LINKS (default=true) Enable or disable links to OpenProject community instances
   OPENPROJECT_SMTP__ADDRESS: "smtp.gmail.com"
   OPENPROJECT_SMTP__AUTHENTICATION: "plain"
   OPENPROJECT_SMTP__DOMAIN: "gmail.com"
   OPENPROJECT_SMTP__ENABLE__STARTTLS__AUTO: true
-  # OPENPROJECT_SMTP__OPENSSL__VERIFY__MODE (default="peer") Globally set verify mode for OpenSSL. Careful: Setting to none will disable any SSL verification!
-  OPENPROJECT_SMTP__PASSWORD: "YOUR_PASSWORD"
+  OPENPROJECT_SMTP__PASSWORD: "<YOUR_EMAIL_PASSWORD>"
   OPENPROJECT_SMTP__PORT: "587"
-  # OPENPROJECT_SMTP__SSL (default=false) Use SSL connection
-  OPENPROJECT_SMTP__USER__NAME: "YOUR_MAIL"
-  # OPENPROJECT_SQL__SLOW__QUERY__THRESHOLD (default=2000) Time limit in ms after which queries will be logged as slow queries
-  # OPENPROJECT_START__OF__WEEK (default=nil) Week starts on
-  # OPENPROJECT_TIME__FORMAT (default=nil) Time
-  # OPENPROJECT_USER__DEFAULT__TIMEZONE (default=nil) Users default time zone
-  # OPENPROJECT_USER__FORMAT (default=:firstname_lastname) Users name format
-  # OPENPROJECT_USERS__DELETABLE__BY__ADMINS (default=false) User accounts deletable by admins
-  # OPENPROJECT_USERS__DELETABLE__BY__SELF (default=false) Users allowed to delete their accounts
-  # OPENPROJECT_WEB (default={"workers"=>2, "timeout"=>120, "wait_timeout"=>10, "min_threads"=>4, "max_threads"=>16}) Web worker count and threads configuration
-  # OPENPROJECT_WELCOME__ON__HOMESCREEN (default=false) Display welcome block on homescreen
-  # OPENPROJECT_WELCOME__TEXT (default=nil) Welcome block text
-  # OPENPROJECT_WELCOME__TITLE (default=nil) Welcome block title
-  # OPENPROJECT_WORKING__DAYS (default=[1, 2, 3, 4, 5]) Set working days of the week (Array of 1 to 7, where 1=Monday, 7=Sunday)
+  OPENPROJECT_SMTP__USER__NAME: "<YOUR_EMAIL>"
 extraVolumeMounts: []
 extraVolumes: []
 fullnameOverride: ''
@@ -143,15 +66,19 @@ image:
   tag: 14.6.3-slim
 imagePullSecrets: []
 ingress:
-  annotations: {}
-  enabled: false
-  host: <YOUR_HOST>
-  ingressClassName: null
+  annotations:
+    cert-manager.io/issuer: 'cloudflare-dns-issuer'
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '30'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '1800'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '1800'
+  enabled: true
+  host: '<YOUR_DOMAIN>'
+  ingressClassName: 'traefik'
   path: /
   pathType: Prefix
   tls:
     enabled: true
-    secretName: ''
+    secretName: 'openproject-tls'
 memcached:
   bundled: true
   connection:
@@ -172,14 +99,14 @@ nameOverride: ''
 nodeSelector: {}
 openproject:
   admin_user:
-    mail: ''
-    name: ''
-    password: ''
-    password_reset: 'false'
+    mail: 'admin@example.net'
+    name: 'OpenProject Admin'
+    password: 'admin'
+    password_reset: 'true'
   cache:
     store: memcache
   extraEnvVarsSecret: ''
-  host: '<YOUR_HOST>'
+  host: '<YOUR_OPENPROJECT_HOST>'
   hsts: true
   https: true
   oidc:
@@ -212,7 +139,6 @@ persistence:
   accessModes:
     - ReadWriteMany
   annotations: {}
-  # Keep this disabled since we are using a s3 objectstore
   enabled: false
   size: 1Gi
   storageClassName: null
@@ -223,9 +149,9 @@ podSecurityContext:
 postgresql:
   auth:
     database: openproject
-    existingSecret: 'openproject-postgres-secret'
-    password: ''
-    postgresPassword: ''
+    existingSecret: null
+    password: "<YOUR_POSTGRES_PASSWORD>"
+    postgresPassword: "<YOUR_POSTGRES_PASSWORD>"
     username: openproject
   bundled: false
   connection:
@@ -267,9 +193,9 @@ resources:
     cpu: "2000"
 s3:
   auth:
-    accessKeyId: null
-    existingSecret: 'openproject-s3-secret'
-    secretAccessKey: null
+    accessKeyId: "<YOUR_ACCESS_KEY>"
+    existingSecret: ''
+    secretAccessKey: "<YOUR_ACCESS_KEY>"
     secretKeys:
       accessKeyId: accessKeyId
       secretAccessKey: secretAccessKey
