@@ -4,6 +4,13 @@
 # https://www.openproject.org/docs/installation-and-operations/configuration/environment/
 
 
+# If you encounter login problems you can change the admin password in the container console
+#1 RAILS_ENV=production bundle exec rails c
+#2 u = User.find_by_login "admin"
+#3 u.password=u.password_confirmation='my new password'
+#4 u.save
+
+
 affinity: {}
 appInit:
   resources:
@@ -46,14 +53,6 @@ egress:
       configMap: ''
       fileName: ''
 environment:
-  OPENPROJECT_EMAIL__DELIVERY__METHOD: "smtp"
-  OPENPROJECT_SMTP__ADDRESS: "smtp.gmail.com"
-  OPENPROJECT_SMTP__AUTHENTICATION: "plain"
-  OPENPROJECT_SMTP__DOMAIN: "gmail.com"
-  OPENPROJECT_SMTP__ENABLE__STARTTLS__AUTO: true
-  OPENPROJECT_SMTP__PASSWORD: "<YOUR_EMAIL_PASSWORD>"
-  OPENPROJECT_SMTP__PORT: "587"
-  OPENPROJECT_SMTP__USER__NAME: "<YOUR_EMAIL>"
 extraVolumeMounts: []
 extraVolumes: []
 fullnameOverride: ''
@@ -71,6 +70,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: '30'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '1800'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '1800'
+    traefik.ingress.kubernetes.io/router.middlewares: 'openproject-openproject-rewrite-host@kubernetescrd'
   enabled: true
   host: '<YOUR_DOMAIN>'
   ingressClassName: 'traefik'
