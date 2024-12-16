@@ -1,0 +1,33 @@
+FROM openjdk:8-jre-alpine
+
+# Environment variables for Java memory settings
+ENV JAVA_XMS=4G
+ENV JAVA_XMX=4G
+
+# Create minecraft user
+RUN adduser -D -u 1000 minecraft
+
+# Install wget and unzip
+RUN apk add --no-cache wget unzip
+
+# Set working directory
+WORKDIR /server
+
+# Create entrypoint script (MOVED THIS BEFORE USER CHANGE)
+RUN echo '#!/bin/sh\n\
+exec java -server -Xms${JAVA_XMS} -Xmx${JAVA_XMX} -jar forge-1.12.2-14.23.5.2860.jar nogui' > /server/entrypoint.sh && \
+    chmod +x /server/entrypoint.sh
+
+# Download and extract server files
+RUN wget https://apocgaming.org/mp/TKX3-Server-1.2.zip -O tekxit.zip && \
+    unzip tekxit.zip && \
+    rm tekxit.zip && \
+    chown -R minecraft:minecraft /server
+
+# Switch to minecraft user
+USER minecraft
+
+# Expose minecraft server port
+EXPOSE 25565
+
+ENTRYPOINT ["/server/entrypoint.sh"]

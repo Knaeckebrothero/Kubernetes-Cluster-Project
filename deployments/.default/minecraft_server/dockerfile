@@ -1,0 +1,28 @@
+FROM openjdk:8-jre-alpine
+
+# Environment variables for Java memory settings
+ENV JAVA_XMS=4G
+ENV JAVA_XMX=4G
+
+# Create minecraft user
+RUN adduser -D -u 1000 minecraft
+
+# Set working directory
+WORKDIR /server
+
+# Copy all server files
+COPY --chown=minecraft:minecraft . /server/
+
+# Fix line endings in shell script (in case they're CRLF from Windows)
+RUN apk add --no-cache dos2unix && \
+    dos2unix ServerLinux.sh && \
+    apk del dos2unix
+
+# Switch to minecraft user
+USER minecraft
+
+# Expose minecraft server port
+EXPOSE 25565
+
+# Use the ServerLinux.sh script directly
+CMD ["sh", "ServerLinux.sh"]
