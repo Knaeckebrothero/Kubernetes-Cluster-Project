@@ -21,26 +21,26 @@ systemd:
     - name: nm-cloud-setup.timer
       mask: true
 
-    # Setup daily reboot timer (reboots every day, gmt timezone)
-    - name: daily-restart.timer
+    # Setup weekly reboot timer (reboots every week, gmt timezone)
+    - name: weekly-restart.timer
       enabled: true
       contents: |
         [Unit]
-        Description=Daily Restart
+        Description=Weekly Restart
 
         [Timer]
-        OnCalendar=*-*-* 02:45:00
+        OnCalendar=Tue *-*-* 03:40:00
         Persistent=true
 
         [Install]
         WantedBy=multi-user.target
 
     # Setup a service that get's triggered by the timer to reboot the system
-    - name: daily-restart.service
+    - name: Weekly-restart.service
       enabled: true
       contents: |
         [Unit]
-        Description=Trigger Daily Restart
+        Description=Trigger Weekly Restart
 
         [Service]
         Type=oneshot
@@ -82,7 +82,7 @@ systemd:
         Type=simple
         ExecStart=/usr/libexec/zincati agent -v
         Restart=on-failure
-        RestartSec=5s
+        RestartSec=60s
 
         [Install]
         WantedBy=multi-user.target
