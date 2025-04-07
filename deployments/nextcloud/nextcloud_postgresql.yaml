@@ -2,27 +2,12 @@
 # https://hub.docker.com/_/postgres
 
 
-# Volumeclaim for the postgres db
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-postgresql-pvc
-  namespace: nextcloud
-spec:
-  accessModes:
-    - ReadWriteOnce
-  # Use fast storage for the db
-  storageClassName: longhorn-ssd
-  resources:
-    requests:
-      storage: 16Gi
----
 # Config map for the db
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-config
-  namespace: nextcloud
+  namespace: private-nextcloud
 data:
   postgresql.conf: |
     listen_addresses = '*'
@@ -33,7 +18,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nextcloud-postgresql
-  namespace: nextcloud
+  namespace: private-nextcloud
 spec:
   replicas: 1
   selector:
@@ -106,7 +91,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-postgresql
-  namespace: nextcloud
+  namespace: private-nextcloud
 spec:
   selector:
     app: nextcloud-postgresql

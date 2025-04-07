@@ -1,0 +1,27 @@
+# PersistentVolumeClaim for the Nextcloud application
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-pvc
+  namespace: private-nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi
+---
+# Volumeclaim for the postgres db
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-postgresql-pvc
+  namespace: private-nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 16Gi

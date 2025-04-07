@@ -8,7 +8,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: nextcloud-hsts
-  namespace: nextcloud
+  namespace: private-nextcloud
 spec:
   headers:
     stsSeconds: 15552000

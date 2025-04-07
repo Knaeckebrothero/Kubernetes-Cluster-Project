@@ -9,9 +9,9 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: nextcloud-cron
-  namespace: nextcloud
+  namespace: private-nextcloud
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "0 * * * *"  # Changed from */5 * * * * to run hourly
   jobTemplate:
     spec:
       template:
@@ -33,7 +33,7 @@ spec:
             fsGroup: 33
           containers:
           - name: nextcloud-cron
-            image: docker.io/library/nextcloud:production-apache
+            image: docker.io/library/nextcloud:31.0-apache
             command:
             - /bin/sh
             - -c
