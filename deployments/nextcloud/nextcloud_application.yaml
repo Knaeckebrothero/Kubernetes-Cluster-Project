@@ -72,6 +72,9 @@ data:
 #    requests:
 #      storage: 16Gi
 #---
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
@@ -81,7 +84,11 @@ metadata:
   namespace: private-nextcloud
 spec:
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   replicas: 1
+=======
+  replicas: 2
+>>>>>>> Stashed changes
 =======
   replicas: 2
 >>>>>>> Stashed changes
@@ -111,7 +118,11 @@ spec:
       containers:
       - name: nextcloud
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         image: docker.io/library/nextcloud:31.0-apache
+=======
+        image: docker.io/library/nextcloud:29.0.12-apache # production-apache
+>>>>>>> Stashed changes
 =======
         image: docker.io/library/nextcloud:29.0.12-apache # production-apache
 >>>>>>> Stashed changes

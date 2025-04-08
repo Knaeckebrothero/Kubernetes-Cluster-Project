@@ -1,0 +1,37 @@
+# Accidently deleted the volume
+# TODO: Set volume policy to retain so this does not happen again...
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nextcloud-restored-pv
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 16Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn-ssd
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: clonednextcloud110325-pvc-f4242-4d2c7bc3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-pvc
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 16Gi
+  storageClassName: longhorn-ssd
+  volumeName: nextcloud-restored-pv
+  
