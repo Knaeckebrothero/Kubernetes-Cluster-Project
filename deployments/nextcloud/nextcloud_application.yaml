@@ -56,6 +56,23 @@ data:
 
     echo "Post-installation script completed."
 ---
+<<<<<<< Updated upstream
+=======
+# PersistentVolumeClaim for the Nextcloud application
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: nextcloud-pvc
+#  namespace: nextcloud
+#spec:
+#  accessModes:
+#    - ReadWriteMany
+#  storageClassName: longhorn-ssd
+#  resources:
+#    requests:
+#      storage: 16Gi
+#---
+>>>>>>> Stashed changes
 # Deployment for the Nextcloud application
 apiVersion: apps/v1
 kind: Deployment
@@ -63,7 +80,11 @@ metadata:
   name: nextcloud
   namespace: private-nextcloud
 spec:
+<<<<<<< Updated upstream
   replicas: 1
+=======
+  replicas: 2
+>>>>>>> Stashed changes
   selector:
     matchLabels:
       app: nextcloud
@@ -89,7 +110,11 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
       - name: nextcloud
+<<<<<<< Updated upstream
         image: docker.io/library/nextcloud:31.0-apache
+=======
+        image: docker.io/library/nextcloud:29.0.12-apache # production-apache
+>>>>>>> Stashed changes
         ports:
         - containerPort: 80
         resources:

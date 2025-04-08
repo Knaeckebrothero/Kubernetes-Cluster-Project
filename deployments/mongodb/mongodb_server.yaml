@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-ssd
+  resources:
+    requests:
+      storage: 128Gi
+---
+# Init container will combine cert and key into a PEM file
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: combine-certs
+  namespace: mongodb
+data:
+  combine.sh: |
+    #!/bin/sh
+    cat /certs-input/tls.crt /certs-input/tls.key > /certs-output/mongodb.pem
+    cp /certs-input/ca.crt /certs-output/ca.crt
+    chmod 400 /certs-output/mongodb.pem /certs-output/ca.crt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: mongodb
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      initContainers:
+      - name: combine-certs
+        image: busybox
+        command: 
+        - sh
+        - -c
+        - |
+          # Extract the second certificate (CA) from the chain
+          awk '/-----BEGIN CERTIFICATE-----/{i++}i==2' /certs-input/tls.crt > /certs-output/ca.crt
+          # Create PEM for server
+          cat /certs-input/tls.crt /certs-input/tls.key > /certs-output/mongodb.pem
+          # Set permissions
+          chmod 400 /certs-output/mongodb.pem /certs-output/ca.crt
+          chown -R 999:999 /certs-output/
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: mongodb-certs
+          mountPath: /certs-input
+        - name: cert-working
+          mountPath: /certs-output
+      containers:
+      - name: mongodb
+        image: mongo:7.0
+        args:
+        - --tlsMode=preferTLS
+        - --tlsCertificateKeyFile=/certs/mongodb.pem
+        - --tlsCAFile=/certs/ca.crt
+        - --tlsAllowConnectionsWithoutCertificates
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 6Gi
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: root-password
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: cert-working
+          mountPath: /certs
+          readOnly: true
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+      - name: mongodb-certs
+        secret:
+          secretName: mongodb-cert-secret
+      - name: cert-working
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: mongodb
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.101  # This is for newer versions
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 27017
+      targetPort: 27017
+      protocol: TCP
+  selector:
+    app: mongodb
+  loadBalancerIP: 192.168.1.101  # This is for older versions

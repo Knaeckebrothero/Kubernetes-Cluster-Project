@@ -1,0 +1,44 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mongodb-cert
+  namespace: mongodb
+spec:
+  secretName: mongodb-cert-secret
+  issuerRef:
+    name: cloudflare-dns-issuer
+    kind: ClusterIssuer
+  dnsNames:
+  - onemongodb.torulethemall.org
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+  usages:
+    - server auth
+    - client auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mongodb-client-cert
+  namespace: mongodb
+spec:
+  secretName: mongodb-client-cert-secret
+  issuerRef:
+    name: cloudflare-dns-issuer
+    kind: ClusterIssuer
+  commonName: onemongodbclient.torulethemall.org
+  dnsNames:
+  - onemongodbclient.torulethemall.org   # A dummy DNS name since we need one
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+  usages:
+    - client auth
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  subject:
+    organizations:
+      - "MongoDB Clients"

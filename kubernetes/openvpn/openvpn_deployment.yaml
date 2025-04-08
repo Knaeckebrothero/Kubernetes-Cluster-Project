@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvpn-as
+  namespace: vpn-system
+  labels:
+    app: openvpn-as
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvpn-as
+  template:
+    metadata:
+      labels:
+        app: openvpn-as
+    spec:
+      containers:
+      - name: openvpn-as
+        image: openvpn/openvpn-as:latest
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+              - MKNOD
+        ports:
+        - containerPort: 943
+          name: admin-ui
+        - containerPort: 443
+          name: tcp-vpn
+        - containerPort: 1194
+          protocol: UDP
+          name: udp-vpn
+        volumeMounts:
+        - name: openvpn-data
+          mountPath: /openvpn
+        - name: dev-net-tun
+          mountPath: /dev/net/tun
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+      volumes:
+      - name: openvpn-data
+        persistentVolumeClaim:
+          claimName: openvpn-pvc
+      - name: dev-net-tun
+        hostPath:
+          path: /dev/net/tun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openvpn-as
+  namespace: vpn-system
+spec:
+  selector:
+    app: openvpn-as
+  ports:
+  - name: admin-ui
+    port: 943
+    targetPort: 943
+  - name: tcp-vpn
+    port: 443
+    targetPort: 443
+  - name: udp-vpn
+    port: 1194
+    protocol: UDP
+    targetPort: 1194
+  type: LoadBalancer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openvpn-cert
+  namespace: vpn-system
+spec:
+  secretName: openvpn-tls
+  issuerRef:
+    name: cloudflare-dns-issuer
+    kind: ClusterIssuer
+  dnsNames:
+  - vpn.your-domain.com
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: ECDSA
+    size: 384

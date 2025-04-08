@@ -1,0 +1,63 @@
+# MongoDB Community Operator Helm Values
+# https://github.com/mongodb/mongodb-kubernetes-operator
+
+
+agent:
+  name: mongodb-agent-ubi
+  version: 107.0.7.8596-1
+community-operator-crds:
+  enabled: true
+createResource: false
+database:
+  name: mongodb-database
+imagePullSecrets: []
+mongodb:
+  imageType: ubi8
+  name: mongodb-community-server
+  repo: docker.io/mongodb
+operator:
+  deploymentName: mongodb-kubernetes-operator
+  extraEnvs: []
+  name: mongodb-kubernetes-operator
+  operatorImageName: mongodb-kubernetes-operator
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 2000
+  priorityClassName: ''
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  securityContext: {}
+  version: 0.11.0
+readinessProbe:
+  name: mongodb-kubernetes-readinessprobe
+  version: 1.0.20
+registry:
+  agent: quay.io/mongodb
+  operator: quay.io/mongodb
+  pullPolicy: IfNotPresent
+  readinessProbe: quay.io/mongodb
+  versionUpgradeHook: quay.io/mongodb
+resource:
+  members: 3
+  name: mongodb-replica-set
+  tls:
+    caCertificateSecretRef: tls-ca-key-pair
+    certManager:
+      certDuration: 8760h
+      renewCertBefore: 720h
+    certificateKeySecretRef: tls-certificate
+    enabled: false
+    sampleX509User: false
+    useCertManager: true
+    useX509: false
+  users: []
+  version: 4.4.0
+versionUpgradeHook:
+  name: mongodb-kubernetes-operator-version-upgrade-post-start-hook
+  version: 1.0.9
