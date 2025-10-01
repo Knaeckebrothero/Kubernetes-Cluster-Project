@@ -1,0 +1,121 @@
+---
+# Deployment for Specialized Model (Code Generation)
+# Example: DeepSeek-Coder-V2-Lite (16B total, 2.4B active)
+# Memory requirement: ~5-8GB VRAM at BF16 (very efficient)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deepseek-coder
+  namespace: llm-serving
+  labels:
+    app: deepseek-coder
+    model-size: specialized
+    model-type: code
+    framework: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deepseek-coder
+  template:
+    metadata:
+      labels:
+        app: deepseek-coder
+        model-size: specialized
+        model-type: code
+    spec:
+      containers:
+      - name: vllm-server
+        image: vllm/vllm-openai:v0.5.0
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: MODEL
+          value: "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct"
+        - name: SERVED_MODEL_NAME
+          value: "deepseek-coder"
+        - name: MAX_MODEL_LEN
+          value: "65536"  # Extended context for code
+        - name: GPU_MEMORY_UTILIZATION
+          value: "0.90"  # Leave more room since model is smaller
+        - name: MAX_NUM_BATCHED_TOKENS
+          value: "65536"
+        - name: MAX_NUM_SEQS
+          value: "512"  # Can handle more sequences due to small size
+        - name: TENSOR_PARALLEL_SIZE
+          value: "1"
+        - name: DTYPE
+          value: "bfloat16"  # Full precision for code accuracy
+        - name: ENABLE_PREFIX_CACHING
+          value: "true"
+        - name: HF_HOME
+          value: "/model-cache"
+        - name: TRANSFORMERS_CACHE
+          value: "/model-cache"
+        - name: PORT
+          value: "8000"
+        # Code-specific optimizations
+        - name: TRUST_REMOTE_CODE
+          value: "true"  # Required for some custom model implementations
+        resources:
+          requests:
+            memory: "16Gi"
+            cpu: "6"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "32Gi"
+            cpu: "12"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: model-cache
+          mountPath: /model-cache
+        - name: dshm
+          mountPath: /dev/shm
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 240
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 240
+          periodSeconds: 10
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: model-cache-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 12Gi
+      nodeSelector:
+        node.kubernetes.io/gpu: "true"
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+# Service for Specialized Model
+apiVersion: v1
+kind: Service
+metadata:
+  name: deepseek-coder-service
+  namespace: llm-serving
+  labels:
+    app: deepseek-coder
+spec:
+  type: ClusterIP
+  selector:
+    app: deepseek-coder
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+    

@@ -1,0 +1,101 @@
+---
+# Ingress for exposing LLM services with path-based routing
+# Provides a single entry point for all models
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: llm-ingress
+  namespace: llm-serving
+  annotations:
+    # k3s uses Traefik by default
+    kubernetes.io/ingress.class: "traefik"
+    # Enable CORS for web frontends
+    traefik.ingress.kubernetes.io/router.middlewares: llm-serving-cors@kubernetescrd
+    # Increase timeout for long-running generations
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  rules:
+  - host: llm.university.local  # Replace with your domain
+    http:
+      paths:
+      # Multi-instance load balanced model (default/high-traffic)
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: llama-multi-lb
+            port:
+              number: 80
+      # Individual model endpoints
+      - path: /models/llama-8b
+        pathType: Prefix
+        backend:
+          service:
+            name: llama-3-1-8b-service
+            port:
+              number: 8000
+      - path: /models/mixtral
+        pathType: Prefix
+        backend:
+          service:
+            name: mixtral-8x7b-service
+            port:
+              number: 8000
+      - path: /models/deepseek-coder
+        pathType: Prefix
+        backend:
+          service:
+            name: deepseek-coder-service
+            port:
+              number: 8000
+  tls:
+  - hosts:
+    - llm.university.local
+    secretName: llm-tls-secret  # TLS certificate secret
+---
+# CORS Middleware for Traefik
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: cors
+  namespace: llm-serving
+spec:
+  headers:
+    accessControlAllowMethods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+    accessControlAllowHeaders:
+    - "*"
+    accessControlAllowOriginList:
+    - "*"  # Restrict to specific domains in production
+    accessControlMaxAge: 100
+    addVaryHeader: true
+---
+# Rate Limiting Middleware (Optional but recommended)
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: llm-serving
+spec:
+  rateLimit:
+    average: 100  # Average requests per second
+    burst: 200    # Burst capacity
+    period: 1s
+---
+# Combined Middleware Chain
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: llm-middleware-chain
+  namespace: llm-serving
+spec:
+  chain:
+    middlewares:
+    - name: cors
+    - name: rate-limit
+    

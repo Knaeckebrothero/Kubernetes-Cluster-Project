@@ -1,0 +1,114 @@
+---
+# Deployment for Small Model (7B-8B parameters)
+# Example: Meta Llama 3.1 8B Instruct
+# Memory requirement: ~16-20GB VRAM at BF16
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-3-1-8b
+  namespace: llm-serving
+  labels:
+    app: llama-3-1-8b
+    model-size: small
+    framework: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama-3-1-8b
+  template:
+    metadata:
+      labels:
+        app: llama-3-1-8b
+        model-size: small
+    spec:
+      containers:
+      - name: vllm-server
+        image: vllm/vllm-openai:v0.5.0  # Update to latest stable version
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: MODEL
+          value: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+        - name: SERVED_MODEL_NAME
+          value: "llama-3.1-8b"
+        - name: MAX_MODEL_LEN
+          value: "32768"  # Reduced from 128k to fit memory constraints
+        - name: GPU_MEMORY_UTILIZATION
+          value: "0.95"  # Use 95% of GPU memory for model
+        - name: MAX_NUM_BATCHED_TOKENS
+          value: "32768"  # Optimize for throughput
+        - name: MAX_NUM_SEQS
+          value: "256"  # Maximum concurrent sequences
+        - name: TENSOR_PARALLEL_SIZE
+          value: "1"  # Single GPU
+        - name: DTYPE
+          value: "bfloat16"  # BF16 precision for L40s
+        - name: HF_HOME
+          value: "/model-cache"
+        - name: TRANSFORMERS_CACHE
+          value: "/model-cache"
+        - name: PORT
+          value: "8000"
+        resources:
+          requests:
+            memory: "32Gi"
+            cpu: "8"
+            nvidia.com/gpu: "1"  # Request one L40 GPU
+          limits:
+            memory: "48Gi"
+            cpu: "16"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: model-cache
+          mountPath: /model-cache
+        - name: dshm
+          mountPath: /dev/shm
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 300  # Model loading can take time
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 300
+          periodSeconds: 10
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: model-cache-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 16Gi  # Shared memory for PyTorch
+      nodeSelector:
+        node.kubernetes.io/gpu: "true"  # Ensure scheduling on GPU node
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+# Service for Small Model
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama-3-1-8b-service
+  namespace: llm-serving
+  labels:
+    app: llama-3-1-8b
+spec:
+  type: ClusterIP
+  selector:
+    app: llama-3-1-8b
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+    

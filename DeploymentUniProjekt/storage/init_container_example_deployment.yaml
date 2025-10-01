@@ -1,0 +1,225 @@
+---
+# Alternative Approach: Init Container for Model Pre-loading
+# This deployment uses an init container to ensure models are downloaded
+# to a local emptyDir before the main container starts
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-3-1-8b-initcontainer
+  namespace: llm-serving
+  labels:
+    app: llama-3-1-8b-init
+    model-size: small
+    framework: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama-3-1-8b-init
+  template:
+    metadata:
+      labels:
+        app: llama-3-1-8b-init
+    spec:
+      initContainers:
+      # Pre-download model to shared volume
+      - name: model-downloader
+        image: python:3.11-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install --no-cache-dir huggingface-hub
+          python -c "
+          from huggingface_hub import snapshot_download
+          import os
+          
+          model_id = 'meta-llama/Meta-Llama-3.1-8B-Instruct'
+          cache_dir = '/model-cache'
+          
+          # Check if model already exists
+          model_path = os.path.join(cache_dir, 'models--' + model_id.replace('/', '--'))
+          if os.path.exists(model_path):
+              print(f'Model {model_id} already cached')
+          else:
+              print(f'Downloading {model_id}...')
+              snapshot_download(
+                  repo_id=model_id,
+                  cache_dir=cache_dir,
+                  local_files_only=False,
+                  resume_download=True
+              )
+              print('Download complete')
+          "
+        env:
+        - name: HF_HOME
+          value: "/model-cache"
+        - name: TRANSFORMERS_CACHE
+          value: "/model-cache"
+        # Uncomment if using private/gated models
+        # - name: HF_TOKEN
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: hf-token
+        #       key: token
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+      containers:
+      - name: vllm-server
+        image: vllm/vllm-openai:v0.5.0
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: MODEL
+          value: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+        - name: DOWNLOAD_DIR
+          value: "/model-cache"
+        - name: HF_HOME
+          value: "/model-cache"
+        - name: TRANSFORMERS_CACHE
+          value: "/model-cache"
+        - name: SERVED_MODEL_NAME
+          value: "llama-3.1-8b"
+        - name: MAX_MODEL_LEN
+          value: "32768"
+        - name: GPU_MEMORY_UTILIZATION
+          value: "0.95"
+        - name: DTYPE
+          value: "bfloat16"
+        resources:
+          requests:
+            memory: "32Gi"
+            cpu: "8"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "48Gi"
+            cpu: "16"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: model-storage
+        # Option A: Use hostPath (single node setup)
+        hostPath:
+          path: /var/lib/llm-models
+          type: DirectoryOrCreate
+        # Option B: Use PVC (if you have RWX storage)
+        # persistentVolumeClaim:
+        #   claimName: model-cache-pvc
+        # Option C: Use emptyDir (models lost on pod restart)
+        # emptyDir:
+        #   sizeLimit: 100Gi
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 16Gi
+      nodeSelector:
+        node.kubernetes.io/gpu: "true"
+---
+# ConfigMap for Model Registry (which models to pre-cache)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-precache-list
+  namespace: llm-serving
+data:
+  models.txt: |
+    meta-llama/Meta-Llama-3.1-8B-Instruct
+    mistralai/Mixtral-8x7B-Instruct-v0.1
+    deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+---
+# DaemonSet to pre-cache models on GPU nodes
+# This runs once per node and downloads all models
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: model-precacher
+  namespace: llm-serving
+spec:
+  selector:
+    matchLabels:
+      app: model-precacher
+  template:
+    metadata:
+      labels:
+        app: model-precacher
+    spec:
+      nodeSelector:
+        node.kubernetes.io/gpu: "true"
+      containers:
+      - name: precacher
+        image: python:3.11-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install --no-cache-dir huggingface-hub
+          
+          # Read models from ConfigMap
+          while IFS= read -r model_id; do
+            [ -z "$model_id" ] && continue
+            echo "Checking model: $model_id"
+            
+            python -c "
+          from huggingface_hub import snapshot_download
+          import os
+          import sys
+          
+          model_id = '$model_id'
+          cache_dir = '/model-cache'
+          
+          model_path = os.path.join(cache_dir, 'models--' + model_id.replace('/', '--'))
+          if os.path.exists(model_path):
+              print(f'Model {model_id} already cached')
+          else:
+              print(f'Downloading {model_id}...')
+              try:
+                  snapshot_download(
+                      repo_id=model_id,
+                      cache_dir=cache_dir,
+                      local_files_only=False,
+                      resume_download=True
+                  )
+                  print(f'Successfully downloaded {model_id}')
+              except Exception as e:
+                  print(f'Failed to download {model_id}: {e}')
+                  sys.exit(1)
+            "
+          done < /config/models.txt
+          
+          # Keep container running for monitoring
+          echo "All models cached. Sleeping..."
+          sleep infinity
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+        - name: config
+          mountPath: /config
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
+      volumes:
+      - name: model-storage
+        hostPath:
+          path: /var/lib/llm-models
+          type: DirectoryOrCreate
+      - name: config
+        configMap:
+          name: model-precache-list
+          

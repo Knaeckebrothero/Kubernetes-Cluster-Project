@@ -1,0 +1,125 @@
+---
+# Deployment for Medium Model (30B-45B active parameters)
+# Example: Mistral Mixtral 8x7B (Mixture of Experts)
+# Memory requirement: ~25-30GB VRAM with INT8 quantization
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mixtral-8x7b
+  namespace: llm-serving
+  labels:
+    app: mixtral-8x7b
+    model-size: medium
+    model-type: moe
+    framework: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mixtral-8x7b
+  template:
+    metadata:
+      labels:
+        app: mixtral-8x7b
+        model-size: medium
+        model-type: moe
+    spec:
+      containers:
+      - name: vllm-server
+        image: vllm/vllm-openai:v0.5.0
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: MODEL
+          value: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+        - name: SERVED_MODEL_NAME
+          value: "mixtral-8x7b"
+        - name: MAX_MODEL_LEN
+          value: "16384"  # Reduced context for memory efficiency
+        - name: GPU_MEMORY_UTILIZATION
+          value: "0.95"
+        - name: MAX_NUM_BATCHED_TOKENS
+          value: "16384"
+        - name: MAX_NUM_SEQS
+          value: "128"  # Reduced for larger model
+        - name: TENSOR_PARALLEL_SIZE
+          value: "1"
+        - name: QUANTIZATION
+          value: "awq"  # Use AWQ quantization for memory efficiency
+        - name: DTYPE
+          value: "float16"  # FP16 for quantized models
+        - name: ENABLE_PREFIX_CACHING
+          value: "true"  # Enable KV cache optimization
+        - name: HF_HOME
+          value: "/model-cache"
+        - name: TRANSFORMERS_CACHE
+          value: "/model-cache"
+        - name: PORT
+          value: "8000"
+        # MoE specific optimizations
+        - name: MAX_NUM_BATCHED_EXPERTS
+          value: "8"  # Number of experts to batch
+        - name: EXPERT_PARALLEL_SIZE
+          value: "1"  # Single GPU expert parallelism
+        resources:
+          requests:
+            memory: "48Gi"
+            cpu: "12"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "64Gi"
+            cpu: "24"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: model-cache
+          mountPath: /model-cache
+        - name: dshm
+          mountPath: /dev/shm
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 600  # MoE models take longer to load
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 600
+          periodSeconds: 10
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: model-cache-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 24Gi
+      nodeSelector:
+        node.kubernetes.io/gpu: "true"
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+# Service for Medium Model
+apiVersion: v1
+kind: Service
+metadata:
+  name: mixtral-8x7b-service
+  namespace: llm-serving
+  labels:
+    app: mixtral-8x7b
+spec:
+  type: ClusterIP
+  selector:
+    app: mixtral-8x7b
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+    

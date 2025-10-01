@@ -1,0 +1,189 @@
+---
+# ConfigMap for Model Registry and Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-registry
+  namespace: llm-serving
+data:
+  models.yaml: |
+    models:
+      - name: llama-3.1-8b
+        display_name: "Llama 3.1 8B Instruct"
+        description: "General purpose model with 128k context"
+        category: general
+        size: small
+        memory_requirement: 20GB
+        max_context: 32768
+        endpoint: "/models/llama-8b/v1"
+        capabilities:
+          - chat
+          - completion
+          - reasoning
+          - multilingual
+      - name: mixtral-8x7b
+        display_name: "Mixtral 8x7B MoE"
+        description: "Efficient MoE model with strong performance"
+        category: general
+        size: medium
+        memory_requirement: 30GB
+        max_context: 16384
+        endpoint: "/models/mixtral/v1"
+        capabilities:
+          - chat
+          - completion
+          - reasoning
+          - code
+      - name: deepseek-coder
+        display_name: "DeepSeek Coder V2 Lite"
+        description: "Specialized model for code generation"
+        category: specialized
+        size: small
+        memory_requirement: 8GB
+        max_context: 65536
+        endpoint: "/models/deepseek-coder/v1"
+        capabilities:
+          - code
+          - debugging
+          - documentation
+---
+# ServiceMonitor for Prometheus scraping (if using Prometheus Operator)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vllm-metrics
+  namespace: llm-serving
+  labels:
+    app: vllm
+spec:
+  selector:
+    matchLabels:
+      framework: vllm
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+---
+# Grafana Dashboard ConfigMap (excerpt)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: llm-serving
+data:
+  llm-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "LLM Serving Metrics",
+        "panels": [
+          {
+            "title": "Requests per Second",
+            "targets": [
+              {
+                "expr": "rate(vllm_request_count_total[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Token Generation Rate",
+            "targets": [
+              {
+                "expr": "rate(vllm_generation_tokens_total[5m])"
+              }
+            ]
+          },
+          {
+            "title": "GPU Utilization",
+            "targets": [
+              {
+                "expr": "DCGM_FI_DEV_GPU_UTIL"
+              }
+            ]
+          },
+          {
+            "title": "GPU Memory Usage",
+            "targets": [
+              {
+                "expr": "DCGM_FI_DEV_FB_USED / DCGM_FI_DEV_FB_TOTAL * 100"
+              }
+            ]
+          },
+          {
+            "title": "Queue Length",
+            "targets": [
+              {
+                "expr": "vllm_pending_requests"
+              }
+            ]
+          },
+          {
+            "title": "Time to First Token (p95)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(vllm_time_to_first_token_seconds_bucket[5m]))"
+              }
+            ]
+          }
+        ]
+      }
+    }
+---
+# PodMonitor for individual pod metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: vllm-pods
+  namespace: llm-serving
+spec:
+  selector:
+    matchLabels:
+      framework: vllm
+  podMetricsEndpoints:
+  - port: metrics
+    interval: 30s
+---
+# NetworkPolicy for security (optional but recommended)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: llm-network-policy
+  namespace: llm-serving
+spec:
+  podSelector:
+    matchLabels:
+      framework: vllm
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: llm-serving
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8001
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS for model downloads
+    - protocol: TCP
+      port: 80   # HTTP
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 53  # DNS
+    - protocol: UDP
+      port: 53
+      

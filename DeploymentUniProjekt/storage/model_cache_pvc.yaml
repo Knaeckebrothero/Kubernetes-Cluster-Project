@@ -1,0 +1,119 @@
+---
+# Option 1: HostPath Volume (Simplest for Single Node)
+# Since you have a single node, hostPath is actually practical
+# This creates a directory on the host that all pods can access
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: model-cache-pv
+  namespace: llm-serving
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany  # Works with hostPath on single node
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: model-cache-storage
+  hostPath:
+    path: /var/lib/llm-models  # Create this directory on your host
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-cache-pvc
+  namespace: llm-serving
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: model-cache-storage
+  resources:
+    requests:
+      storage: 500Gi
+---
+# Storage class for the hostPath PV
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: model-cache-storage
+provisioner: kubernetes.io/no-provisioner  # Local volume, no dynamic provisioning
+volumeBindingMode: WaitForFirstConsumer
+---
+# Option 2: Individual PVCs (Works with local-path but duplicates storage)
+# Uncomment this section if you prefer separate storage per deployment
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: model-cache-llama-pvc
+#   namespace: llm-serving
+# spec:
+#   accessModes:
+#     - ReadWriteOnce  # local-path default
+#   storageClassName: local-path
+#   resources:
+#     requests:
+#       storage: 100Gi  # Smaller since model-specific
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: model-cache-mixtral-pvc
+#   namespace: llm-serving
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   storageClassName: local-path
+#   resources:
+#     requests:
+#       storage: 100Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: model-cache-deepseek-pvc
+#   namespace: llm-serving
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   storageClassName: local-path
+#   resources:
+#     requests:
+#       storage: 50Gi
+---
+# Option 3: NFS-based Storage (If you set up NFS server)
+# Uncomment if you have NFS server available
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: model-cache-nfs-pv
+# spec:
+#   capacity:
+#     storage: 500Gi
+#   accessModes:
+#     - ReadWriteMany
+#   nfs:
+#     server: nfs-server.local  # Your NFS server
+#     path: "/exports/llm-models"
+#   persistentVolumeReclaimPolicy: Retain
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: model-cache-nfs-pvc
+#   namespace: llm-serving
+# spec:
+#   accessModes:
+#     - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 500Gi
+---
+# Namespace for LLM serving infrastructure
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-serving
+  labels:
+    name: llm-serving
+    project: predictive-analytics
+    
