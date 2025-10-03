@@ -1,0 +1,182 @@
+# Use butane to generate the ignition file
+# Windows command: butane --pretty --strict config.bu --output config.ign
+# Configuration for Kubernetes node with LUKS encryption
+#
+# IMPORTANT: For Tang-based LUKS unlock to work, you MUST provide network configuration
+# at boot time via kernel arguments. Example:
+# ip=10.0.50.11::10.0.50.1:255.255.255.0:node-name:ens3:none:10.0.50.1
+# This can be added via coreos-installer or PXE boot configuration
+variant: fcos
+version: 1.6.0
+
+# Boot device LUKS encryption with Tang server unlock
+boot_device:
+  luks:
+    tang:
+      - url: "http://<TANG_SERVER_IP>:7500"  # Replace with your Tang server address
+        thumbprint: "<TANG_THUMBPRINT>"      # Replace with your Tang server's thumbprint
+    discard: true  # Enable TRIM support for SSD performance
+
+# User configuration
+passwd:
+  users:
+    # CoreOS user with sudo privileges and SSH key for remote access
+    - name: core 
+      ssh_authorized_keys:
+        - ssh-ed25519 <SSH KEY>
+
+# System services configuration
+systemd:
+  units:
+    # Disable cloud-init services
+    - name: nm-cloud-setup.service
+      mask: true
+    - name: nm-cloud-setup.timer
+      mask: true
+
+    # Setup weekly reboot timer (reboots every week, gmt timezone)
+    - name: weekly-restart.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Weekly Restart
+
+        [Timer]
+        OnCalendar=Tue *-*-* 03:00:00
+        Persistent=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # Setup a service that get's triggered by the timer to reboot the system
+    - name: Weekly-restart.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Trigger Weekly Restart
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/systemctl reboot
+
+        [Install]
+        WantedBy=timer.target
+
+    # Install and configure kubernetes
+    - name: k3s-install.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install k3s
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        Type=oneshot
+        # Use this for the second node to join the cluster     
+        Environment="INSTALL_K3S_EXEC=server --server https://192.168.1.102:6443 --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.101"
+        Environment="K3S_TOKEN=<TOKEN>"
+        ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # Setup zincati update service
+    - name: zincati.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Zincati Update Service
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        Type=simple
+        ExecStart=/usr/libexec/zincati agent -v
+        Restart=on-failure
+        RestartSec=5s
+
+        [Install]
+        WantedBy=multi-user.target
+
+# Storage configuration
+# - 2TB M.2 SSD: Encrypted via LUKS (boot_device.luks above), contains OS + Longhorn storage
+# - 4TB SATA SSD: Unencrypted, dedicated to MinIO object storage
+storage:
+  disks:
+    # Main OS disk (2TB M.2 SSD) - will be encrypted by boot_device.luks
+    - device: /dev/disk/by-id/coreos-boot-disk
+      wipe_table: false
+      partitions:
+      - number: 4  # Root partition (will be encrypted)
+        label: root
+        size_mib: 16384  # 16GB for root filesystem
+        resize: true
+      - size_mib: 0  # Remaining space for /var (includes Longhorn storage)
+        label: var
+
+    # MinIO storage disk (4TB SATA SSD) - unencrypted for performance
+    - device: /dev/disk/by-id/wwn-<4TB_SATA_WWN>  # Replace with actual WWN
+      wipe_table: true
+      partitions:
+      - number: 1
+        label: minio-storage
+        size_mib: 0  # Use entire disk
+        start_mib: 0
+
+  # Configure file systems
+  filesystems:
+    # Mount /var partition (on encrypted disk)
+    - path: /var
+      device: /dev/disk/by-partlabel/var
+      format: xfs
+      wipe_filesystem: true
+      with_mount_unit: true
+
+    # Mount MinIO storage (unencrypted disk)
+    - path: /var/lib/minio
+      device: /dev/disk/by-partlabel/minio-storage
+      format: xfs
+      wipe_filesystem: true
+      with_mount_unit: true
+
+  # Create directories
+  directories:
+    - path: /var/lib/longhorn  # Longhorn data will be stored on encrypted /var
+      mode: 0755
+    - path: /var/lib/minio  # MinIO mount point
+      mode: 0755
+
+  # Create files
+  files:
+    # Set the hostname
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: node1
+
+    # Confiure a longer shutdown timeout (we give this one more time due to the large number of drives)
+    - path: /etc/systemd/system.conf.d/90-custom.conf
+      mode: 0644
+      contents:
+        inline: |
+          [Manager]
+          DefaultTimeoutStopSec=600s
+          DefaultTimeoutStartSec=300s
+
+    # Config file for zincati
+    - path: /etc/zincati/config.d/90-custom.toml
+      overwrite: true
+      mode: 0644
+      contents:
+        inline: |
+          [updates]
+          strategy = "periodic"
+          periodic.interval_minutes = 10080 # Checks for updates every 7 days
+
+          [updates.allow_downgrade]
+          enabled = false  # Avoid downgrades
+
+          [reboot]
+          strategy = "off" # Disable reboot, since server reboots on daily basis anyway
