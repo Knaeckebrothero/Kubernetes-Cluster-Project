@@ -2,28 +2,37 @@
 # Windows command: butane --pretty --strict config.bu --output config.ign
 # Configuration for Kubernetes node with LUKS encryption
 #
-# IMPORTANT: For Tang-based LUKS unlock to work, you MUST provide network configuration
-# at boot time via kernel arguments. Example:
-# ip=10.0.50.11::10.0.50.1:255.255.255.0:node-name:ens3:none:10.0.50.1
-# This can be added via coreos-installer or PXE boot configuration
+# Network Configuration:
+# - Nodes use DHCP from MikroTik router (10.0.50.1)
+# - MikroTik should have DHCP reservations (MAC → stable IP) configured
+# - DHCP enables automatic Tang unlock at boot (no kernel arguments needed!)
+#
+# Required Values to Replace:
+# - <TANG_SERVER_IP>: IP of Tang server (e.g., 10.0.50.10)
+# - <TANG_THUMBPRINT>: Tang server's signing key thumbprint
+# - <SSH_KEY>: Your SSH public key
+# - <K3S_MASTER_IP>: K3s master node IP
+# - <THIS_NODE_IP>: This specific node's IP (for K3s external IP)
+# - <K3S_NODE_IPS>: Comma-separated list of all K3s node IPs (for TLS SAN)
 variant: fcos
 version: 1.6.0
 
 # Boot device LUKS encryption with Tang server unlock
+# NOTE: Tang unlock works automatically with DHCP (rd.neednet=1 is auto-added by FCOS)
 boot_device:
   luks:
     tang:
-      - url: "http://<TANG_SERVER_IP>:7500"  # Replace with your Tang server address
-        thumbprint: "<TANG_THUMBPRINT>"      # Replace with your Tang server's thumbprint
+      - url: "http://<TANG_SERVER_IP>"  # Example: http://10.0.50.10
+        thumbprint: "<TANG_THUMBPRINT>"  # Get from: tang-show-keys on Tang server
     discard: true  # Enable TRIM support for SSD performance
 
 # User configuration
 passwd:
   users:
     # CoreOS user with sudo privileges and SSH key for remote access
-    - name: core 
+    - name: core
       ssh_authorized_keys:
-        - ssh-ed25519 <SSH KEY>
+        - <SSH_KEY>  # Your full SSH public key (ssh-ed25519 AAAA...)
 
 # System services configuration
 systemd:
@@ -70,12 +79,18 @@ systemd:
         Description=Install k3s
         After=network-online.target
         Wants=network-online.target
+        ConditionPathExists=!/usr/local/bin/k3s
 
         [Service]
         Type=oneshot
-        # Use this for the second node to join the cluster     
-        Environment="INSTALL_K3S_EXEC=server --server https://192.168.1.102:6443 --tls-san 192.168.1.101,192.168.1.102,192.168.1.103 --node-external-ip=192.168.1.101"
-        Environment="K3S_TOKEN=<TOKEN>"
+        # FIRST NODE ONLY - Uncomment these lines to initialize a new HA cluster:
+        # Environment="INSTALL_K3S_EXEC=server --cluster-init --tls-san <K3S_NODE_IPS> --node-external-ip=<THIS_NODE_IP>"
+        # ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -s - --write-kubeconfig-mode 644'
+        # After first node starts, get token with: sudo cat /var/lib/rancher/k3s/server/node-token
+        #
+        # JOINING NODES - Use these lines for additional server/worker nodes:
+        Environment="INSTALL_K3S_EXEC=server --server https://<K3S_MASTER_IP>:6443 --tls-san <K3S_NODE_IPS> --node-external-ip=<THIS_NODE_IP>"
+        Environment="K3S_TOKEN=<K3S_TOKEN>"
         ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
         RemainAfterExit=true
 
@@ -117,7 +132,8 @@ storage:
         label: var
 
     # MinIO storage disk (4TB SATA SSD) - unencrypted for performance
-    - device: /dev/disk/by-id/wwn-<4TB_SATA_WWN>  # Replace with actual WWN
+    # Using standard device name since all nodes have identical hardware setup
+    - device: /dev/sda
       wipe_table: true
       partitions:
       - number: 1
@@ -154,9 +170,9 @@ storage:
     - path: /etc/hostname
       mode: 0644
       contents:
-        inline: node1
+        inline: <NODE_HOSTNAME>  # Example: k3s-node-1, k3s-node-2, etc.
 
-    # Confiure a longer shutdown timeout (we give this one more time due to the large number of drives)
+    # Configure longer shutdown timeout for graceful K3s pod termination
     - path: /etc/systemd/system.conf.d/90-custom.conf
       mode: 0644
       contents:
