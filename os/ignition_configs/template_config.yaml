@@ -11,7 +11,9 @@
 # - <TANG_SERVER_IP>: IP of Tang server (e.g., 10.0.50.10)
 # - <TANG_THUMBPRINT>: Tang server's signing key thumbprint
 # - <SSH_KEY>: Your SSH public key
-# - <K3S_MASTER_IP>: K3s master node IP
+# - <NODE_HOSTNAME>: Hostname for this node (e.g., k3s-node-1, k3s-node-2)
+# - <K3S_MASTER_IP>: K3s master node IP (for joining nodes)
+# - <K3S_TOKEN>: Token from first node (get with: sudo cat /var/lib/rancher/k3s/server/node-token)
 # - <THIS_NODE_IP>: This specific node's IP (for K3s external IP)
 # - <K3S_NODE_IPS>: Comma-separated list of all K3s node IPs (for TLS SAN)
 variant: fcos
@@ -19,6 +21,8 @@ version: 1.6.0
 
 # Boot device LUKS encryption with Tang server unlock
 # NOTE: Tang unlock works automatically with DHCP (rd.neednet=1 is auto-added by FCOS)
+# IMPORTANT: Back up Tang server keys (/var/db/tang/ on Tang server) and store securely!
+#            If Tang server fails and keys are lost, encrypted nodes cannot be recovered.
 boot_device:
   luks:
     tang:
