@@ -28,6 +28,8 @@ boot_device:
     tang:
       - url: "http://<TANG_SERVER_IP>"  # Example: http://10.0.50.10
         thumbprint: "<TANG_THUMBPRINT>"  # Get from: tang-show-keys on Tang server
+    tpm2: true
+    threshold: 2  # Requires both TPM and Clevis to unlock
     discard: true  # Enable TRIM support for SSD performance
 
 # User configuration
