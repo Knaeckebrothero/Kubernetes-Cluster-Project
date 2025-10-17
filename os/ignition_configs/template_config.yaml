@@ -89,16 +89,21 @@ systemd:
 
         [Service]
         Type=oneshot
-        # FIRST NODE ONLY - Uncomment these lines to initialize a new HA cluster:
+        ### FIRST NODE ONLY - Uncomment these lines to initialize a new HA cluster:
         # Environment="INSTALL_K3S_EXEC=server --cluster-init --tls-san <K3S_NODE_IPS> --node-external-ip=<THIS_NODE_IP>"
         # ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -s - --write-kubeconfig-mode 644'
         # After first node starts, get token with: sudo cat /var/lib/rancher/k3s/server/node-token
-        #
-        # JOINING NODES - Use these lines for additional server/worker nodes:
+        ### JOINING SERVER NODE - Use these lines for additional server/worker nodes:
         Environment="INSTALL_K3S_EXEC=server --server https://<K3S_MASTER_IP>:6443 --tls-san <K3S_NODE_IPS> --node-external-ip=<THIS_NODE_IP>"
         Environment="K3S_TOKEN=<K3S_TOKEN>"
         ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" K3S_TOKEN="$K3S_TOKEN" sh -s - --write-kubeconfig-mode 644'
+        ### WORKER NODE - Join cluster as agent
+        # Environment="https://<K3S_SERVER_NODE_IP>:6443"
+        # Environment="K3S_TOKEN=<YOUR_AGENT_TOKEN_HERE>" # <-- Get from master: sudo cat /var/lib/rancher/k3s/server/agent-token
+        # Environment="INSTALL_K3S_EXEC=agent --node-external-ip=<THIS_NODE_IP>"
+        # ExecStart=/bin/sh -c 'curl -sfL https://get.k3s.io | K3S_URL="$K3S_URL" K3S_TOKEN="$K3S_TOKEN" INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -s -'
         RemainAfterExit=true
+
 
         [Install]
         WantedBy=multi-user.target
